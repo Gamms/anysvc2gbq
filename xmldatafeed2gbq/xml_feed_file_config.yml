@@ -1,0 +1,69 @@
+word_in_files:
+  - words:
+     word: wildberries
+     bqtableid: WB_pars_auto
+     csvfields:
+       - Date: DATE
+       - Brend: STRING
+       - Seller: STRING
+       - Name_pr: STRING
+       - Code: INTEGER
+       - Position: INTEGER
+       - Page_n: INTEGER
+       - Old_pr: INTEGER
+       - Price: INTEGER
+       - Cover_fb: STRING
+       - Color: STRING
+       - Discount: INTEGER
+       - Rating: INTEGER
+       - Reviwes: INTEGER
+  - words:
+     word: ozonbagchaircategories_characteristics.csv
+     bqtableid: Ozon_pars_auto
+     csvfields:
+       - Date: DATE
+       - Brend: STRING
+       - Seller: STRING
+       - Name_pr: STRING
+       - Code: INTEGER
+       - Art_supplier: STRING
+       - Position: INTEGER
+       - Page_n: INTEGER
+       - Old_pr: INTEGER
+       - Price: INTEGER
+       - Size: STRING
+       - Type: STRING
+       - Cover_fb: STRING
+       - Form: STRING
+       - Pattern: STRING
+       - Color: STRING
+
+  - words:
+     word: ozonbagchaircategories.csv
+     bqtableid: Ozon_pars_auto
+     csvfields:
+       - Date: DATE
+       - Brend: STRING
+       - Seller: STRING
+       - Name_pr: STRING
+       - Code: INTEGER
+       - Position: INTEGER
+       - Page_n: INTEGER
+       - Old_pr: INTEGER
+       - Price: INTEGER
+
+  - words:
+     word: yamarket
+     bqtableid: Ym_pars_auto
+     csvfields:
+       - Date: DATE
+       - Brend: STRING
+       - Name_pr: STRING
+       - Code: STRING
+       - Position: INTEGER
+       - Page_n: INTEGER
+       - Old_pr: INTEGER
+       - Price: INTEGER
+       - Rating: FLOAT
+       - Reviews: INTEGER
+       - Shipping: STRING

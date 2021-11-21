@@ -7,7 +7,7 @@ from google.cloud import bigquery as bq
 from google.oauth2 import service_account
 
 
-def export_js_to_bq(js, tableid, key_path, dataset_id, logger):
+def export_js_to_bq(js, tableid, key_path, dataset_id, logger, fields_list):
     table_id = tableid
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
     credentials = service_account.Credentials.from_service_account_file(
@@ -18,7 +18,11 @@ def export_js_to_bq(js, tableid, key_path, dataset_id, logger):
     dataset_ref = bigquery_client.dataset(dataset_id)
     job_config = bq.LoadJobConfig()
     # Schema autodetection enabled
-    job_config.autodetect = True
+    schema = get_schema_bqtable_from_list(fields_list)
+    if schema != []:
+        job_config.schema = schema
+    else:
+        job_config.autodetect = True
     # Skipping first row which correspnds to the field names
     # Format of the data in GCS
     job_config.source_format = bq.SourceFormat.NEWLINE_DELIMITED_JSON
@@ -161,3 +165,20 @@ def DeleteRowFromTable(table_id, dataset_id, key_path, filtersList: list):
     except Exception as e:
         print(e)
     return results
+
+
+def get_schema_bqtable_from_list(fields_list):
+    schema = []
+    fields_dict = {}
+    for element in fields_list:
+        for field, type_field in element.items():
+            fields_dict[field] = type_field
+    schema = get_schema_field_from_dict(fields_dict)
+    return schema
+
+
+def get_schema_field_from_dict(fields: dict) -> list:
+    schema = []
+    for name, type in fields.items():
+        schema.append(bq.SchemaField(name, type))
+    return schema

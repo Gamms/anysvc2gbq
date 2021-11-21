@@ -11,8 +11,10 @@ from enum import Enum
 from random import choice
 
 import bq_method
+import google.api_core.exceptions
 import requests
 import typer
+import yaml
 from loguru import logger
 from rich.console import Console
 
@@ -32,73 +34,6 @@ app = typer.Typer(
     add_completion=False,
 )
 console = Console()
-
-
-def returnContentsListByType(typefile: str):
-    if typefile == "ozon":
-        list = [
-            "Date",
-            "Brend",
-            "Seller",
-            "Name_pr",
-            "Code",
-            "Position",
-            "Page_n",
-            "Old_pr",
-            "Price",
-        ]
-    elif typefile == "ozon_char":
-        list = [
-            "Date",
-            "Brend",
-            "Seller",
-            "Name_pr",
-            "Code",
-            "Sup_art",
-            "Position",
-            "Page_n",
-            "Old_pr",
-            "Price",
-            "Size",
-            "Type",
-            "Cover_fb",
-            "Form",
-            "Pattern",
-            "Color",
-        ]
-    elif typefile == "wb":
-        list = [
-            "Date",
-            "Brend",
-            "Seller",
-            "Name_pr",
-            "Code",
-            "Position",
-            "Page_n",
-            "Old_pr",
-            "Price",
-            "Cover_fb",
-            "Color",
-            "Discount",
-            "Rating",
-            "Reviwes",
-        ]
-    elif typefile == "ym":
-        list = [
-            "Date",
-            "Brend",
-            "Name_pr",
-            "Code",
-            "Position",
-            "Page_n",
-            "Old_pr",
-            "Price",
-            "Shipping",
-        ]
-
-    else:
-        list = []
-    return list
 
 
 def getallfilesfromxmlfeed(session, url, path, path_for_download, local_file_list):
@@ -134,7 +69,7 @@ def unzipFile(filename, path_for_download):
             zip_ref.extract(fileinzipname, path_for_download + folderUnzipped)
 
 
-def readCsv2Js(fileinzipname, typefile, path_for_download):
+def readCsv2Js(fileinzipname, csvfields, path_for_download):
     jslist = []
     with open(path_for_download + fileinzipname) as csvfile:
         reader = csv.reader(csvfile, delimiter=";")
@@ -144,17 +79,33 @@ def readCsv2Js(fileinzipname, typefile, path_for_download):
             if rowcount <= 2:
                 continue
             dict = {}
-            contentlist = returnContentsListByType(typefile)
 
-            for index, value in enumerate(contentlist):
-                if value == "Date":
-                    dict[value] = (
-                        datetime.datetime.strptime(row[index], "%d.%m.%Y")
-                        .date()
-                        .isoformat()
-                    )
-                else:
-                    dict[value] = row[index]
+            for index, name_type in enumerate(csvfields):
+
+                for value_name, type_value in name_type.items():
+                    value = row[index]
+                    if value_name in ["Code", "Rating"]:
+                        value = value.replace("=", "").replace(
+                            '"', ""
+                        )  # у яндекса корявый разбор нужно убрать = и " из текста
+
+                    if type_value == "DATE":
+                        value = (
+                            datetime.datetime.strptime(value, "%d.%m.%Y")
+                            .date()
+                            .isoformat()
+                        )
+                    elif type_value == "INTEGER":
+                        if value == "":
+                            value = 0
+                        value = int(value)
+                    elif type_value == "FLOAT":
+                        if value == "":
+                            value = 0.0
+                        value = float(value)
+                    elif type_value == "STRING":
+                        value = str(value)
+                    dict[value_name] = value
 
             jslist.append(dict)
     return jslist
@@ -198,6 +149,9 @@ def main(
         retention="100 days",
         level="ERROR",
     )
+    with open("xml_feed_file_config.yml") as f:
+        config = yaml.safe_load(f)
+
     auth = requests.auth.HTTPBasicAuth(user, password)
     basicurl = "https://ru.xmldatafeed.com"
     basicpath = "/remote.php/dav/files/ankuznet@gmail.com/"
@@ -211,38 +165,48 @@ def main(
 
     unzipFileInFolder(downloadpath)
 
+    csv_processing(bqdataset, bqjsonservicefile, downloadpath, config)
+
+
+def csv_processing(bqdataset, bqjsonservicefile, downloadpath, config):
     content = os.listdir(downloadpath + folderUnzipped)
     for file in content:
         if os.path.isfile(
             os.path.join(downloadpath + folderUnzipped, file)
         ) and file.endswith(".csv"):
-            typefile = ""
-            if file.find("wildberries") > -1:
-                typefile = "wb"
-                bqtableid = "WB_pars_auto"
-            elif file.find("ozonbagchaircategories_characteristics") > -1:
-                typefile = "ozon_char"
-                bqtableid = "Ozon_pars_auto"
-            elif file.find("ozon") > -1:
-                typefile = "ozon"
-                bqtableid = "Ozon_pars_auto"
-            elif file.find("yamarket") > -1:
-                typefile = "ym"
-                bqtableid = "Ym_pars_auto"
+            for words in config["word_in_files"]:
+                if file.find(words["words"]["word"]) > -1:
+                    bqtableid = words["words"]["bqtableid"]
+                    csvfields = words["words"]["csvfields"]
+                    break
             else:
-                typefile = "error"
-                logger.error(f"Неизвестный тип файла:{file}")
+                logger.error(f"Неизвестный тип файла:{file}. Пропускаем")
                 return
             try:
                 logger.info(f"Читаем {file}")
-                jslist = readCsv2Js(file, typefile, downloadpath + folderUnzipped)
-                bq_method.export_js_to_bq(
-                    jslist, bqtableid, bqjsonservicefile, bqdataset, logger
-                )
+                jslist = readCsv2Js(file, csvfields, downloadpath + folderUnzipped)
+                if len(jslist) == 0:
+                    logger.info(f"Файл пустой:{file}")
+                else:
+                    bq_method.export_js_to_bq(
+                        jslist,
+                        bqtableid,
+                        bqjsonservicefile,
+                        bqdataset,
+                        logger,
+                        csvfields,
+                    )
                 shutil.move(
                     downloadpath + folderUnzipped + file,
                     downloadpath + folderComplete + file,
                 )
+            except google.api_core.exceptions.BadRequest as e:
+                logger.exception("Ошибка выгрузки csv в GBQ")
+                shutil.move(
+                    downloadpath + folderUnzipped + file,
+                    downloadpath + folderError + file,
+                )
+
             except Exception as e:
                 logger.exception("Ошибка чтения csv")
                 shutil.move(

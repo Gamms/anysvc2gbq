@@ -46,7 +46,7 @@ def upload_from_1c(
             "value": datestock_end.strftime("%Y-%m-%d"),
         }
     )
-    bq_method.DeleteRowFromTable(bqdataset, bqtable, bqjsonservicefile, filterList)
+    bq_method.DeleteRowFromTable(bqtable, bqdataset, bqjsonservicefile, filterList)
 
     for datestock in daterange(datestock_start, datestock_end):
 

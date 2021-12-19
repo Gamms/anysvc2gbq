@@ -25,7 +25,7 @@ def upload_from_1c(
     datestock_end=datetime.datetime(2021, 12, 19, 23, 59, 59),
 ):
     global query, choose
-    struct_config = Struct(config)
+    struct_config = Struct(**config)
     CONSTR = f'Srvr="{struct_config.server}";Ref="{struct_config.infobase}";Usr="{struct_config.user}";Pwd="{struct_config.password}"'
 
     v83 = win32com.client.Dispatch("V83.COMConnector").Connect(CONSTR)

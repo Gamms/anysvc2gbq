@@ -28,8 +28,14 @@ def version_callback(print_version: bool) -> None:
 def uploadfromxmldatafeed(
     downloadpath: str, user: str, password: str, bqjsonservicefile: str, bqdataset: str
 ) -> None:
-    print(1)
-    return
+    logger_init(downloadpath)
+    with open("xml_feed_file_config.yml") as f:
+        config = yaml.safe_load(f)
+
+    xmldatafeed(bqdataset, bqjsonservicefile, config, downloadpath, password, user)
+
+
+def logger_init(downloadpath):
     logger.add(
         downloadpath + folderLog + "infolog_{time}.log",
         rotation="12:00",
@@ -44,10 +50,6 @@ def uploadfromxmldatafeed(
         retention="100 days",
         level="ERROR",
     )
-    with open("xml_feed_file_config.yml") as f:
-        config = yaml.safe_load(f)
-
-    xmldatafeed(bqdataset, bqjsonservicefile, config, downloadpath, password, user)
 
 
 @logger.catch
@@ -55,8 +57,6 @@ def uploadfromxmldatafeed(
 def uploadfrom1C(
     bqjsonservicefile: str, bqdataset: str = "DB1C", bqtable: str = "tableentry1c"
 ) -> None:
-    print(2)
-    return
 
     with open("client1C_config.yml") as f:
         config = yaml.safe_load(f)

@@ -112,7 +112,7 @@ def upload_from_1c(
         csvfields.append({"dateexport": "DATE"})
 
         bq_method.export_js_to_bq(
-            liststock, "DB1C", bqjsonservicefile, "stocks", logger, csvfields
+            liststock, bqtable, bqjsonservicefile, bqdataset, logger, csvfields
         )
 
 
@@ -126,7 +126,7 @@ def get_query_fullstock():
 	Представление(СГруппированныйЗапрос.item_group_cost) КАК item_group_cost,
 	Представление(СГруппированныйЗапрос.item_type) КАК item_type,
 	СУММА(СГруппированныйЗапрос.reserv) КАК reserv,
-	СУММА(СГруппированныйЗапрос.deliverying) КАК deliverying,
+	СУММА(СГруппированныйЗапрос.deliverying) КАК delivering,
 	СУММА(СГруппированныйЗапрос.ordered) КАК ordered,
 	СУММА(СГруппированныйЗапрос.stock_end) КАК stock_end,
 	СУММА(СГруппированныйЗапрос.stock_start) КАК stock_start,
@@ -217,11 +217,6 @@ def get_query_fullstock():
 	СГруппированныйЗапрос.item_type,
 	СГруппированныйЗапрос.scl,
 	СГруппированныйЗапрос.articul,
-	СГруппированныйЗапрос.stock_end,
-	СГруппированныйЗапрос.stock_start,
-	СГруппированныйЗапрос.stock_in,
-	СГруппированныйЗапрос.stock_out,
-	СГруппированныйЗапрос.stock_end - СГруппированныйЗапрос.reserv
     """
 
 

@@ -17,12 +17,7 @@ class Struct:
 
 
 def upload_from_1c(
-    config,
-    bqjsonservicefile,
-    bqdataset,
-    bqtable,
-    datestock_start=datetime.datetime(2021, 12, 17, 23, 59, 59),
-    datestock_end=datetime.datetime(2021, 12, 19, 23, 59, 59),
+    config, bqjsonservicefile, bqdataset, bqtable, datestock_start, datestock_end
 ):
     global query, choose
     struct_config = Struct(**config)

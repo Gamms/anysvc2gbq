@@ -120,16 +120,15 @@ def DeleteOldReport(datefrom, dateto, dataset_id, key_path, fieldname, table_id,
     return
 
 
-def SelectQuery(key_path, dataset_id, table_id):
+def SelectQuery(key_path, dataset_id, table_id, filtersList: list, query: str = ""):
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
-    credentials = service_account.Credentials.from_service_account_file(
-        key_path,
-        scopes=["https://www.googleapis.com/auth/cloud-platform"],
-    )
-    fulltableid = f"{credentials.project_id}.{dataset_id}.{table_id}"
+    credentials = get_credential(key_path)
     bigquery_client = bq.Client()
     try:
-        query = f"Select * FROM `{fulltableid}` limit 100"
+        if query == "":
+            fulltableid = get_full_tableid(credentials, dataset_id, table_id)
+            query = get_selectquery_for_table(filtersList, fulltableid, query)
+
         job_query = bigquery_client.query(query, project=credentials.project_id)
         results = job_query.result()
     except Exception as e:
@@ -137,13 +136,41 @@ def SelectQuery(key_path, dataset_id, table_id):
     return results
 
 
-def DeleteRowFromTable(table_id, dataset_id, key_path, filtersList: list):
+def get_credential(key_path):
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
     credentials = service_account.Credentials.from_service_account_file(
         key_path,
         scopes=["https://www.googleapis.com/auth/cloud-platform"],
     )
-    fulltableid = f"{credentials.project_id}.{dataset_id}.{table_id}"
+    return credentials
+
+
+def get_selectquery_for_table(key_path, dataset_id, table_id, filtersList, field=""):
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
+    credentials = get_credential(key_path)
+    fulltableid = get_full_tableid(credentials, dataset_id, table_id)
+    if field == "":
+        query = f"Select * FROM `{fulltableid}` where true"
+    else:
+        query = f"Select {field} FROM `{fulltableid}` where true"
+    for elFilter in filtersList:
+        if type(elFilter["value"]) is str and elFilter["operator"] != "in":
+            query = (
+                query
+                + f' and {elFilter["fieldname"]} {elFilter["operator"]} "{elFilter["value"]}"'
+            )
+        else:
+            query = (
+                query
+                + f" and {elFilter['fieldname']} {elFilter['operator']} {elFilter['value']}"
+            )
+    return query
+
+
+def DeleteRowFromTable(table_id, dataset_id, key_path, filtersList: list):
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
+    credentials = get_credential(key_path)
+    fulltableid = get_full_tableid(credentials, dataset_id, table_id)
     bigquery_client = bq.Client()
     results = 0
     try:
@@ -165,6 +192,11 @@ def DeleteRowFromTable(table_id, dataset_id, key_path, filtersList: list):
     except Exception as e:
         print(e)
     return results
+
+
+def get_full_tableid(credentials, dataset_id, table_id):
+    fulltableid = f"{credentials.project_id}.{dataset_id}.{table_id}"
+    return fulltableid
 
 
 def get_schema_bqtable_from_list(fields_list):

@@ -1,13 +1,13 @@
 import datetime
 import os
 
-import loguru
+from loguru import logger
 import pytz
 from google.cloud import bigquery as bq
 from google.oauth2 import service_account
 
 
-def export_js_to_bq(js, tableid, key_path, dataset_id, logger, fields_list):
+def export_js_to_bq(js, tableid, key_path, dataset_id, loger, fields_list):
     table_id = tableid
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
     credentials = service_account.Credentials.from_service_account_file(

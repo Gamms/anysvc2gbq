@@ -110,6 +110,13 @@ def verifydata(
 
     verify(bqjsonservicefile, bqdataset, bqtable)
 
+@logger.catch
+@app.command()
+def gui(
+    bqjsonservicefile: str='polar.json', bqdataset: str = "DB2019", bqtable: str = "wb_ozon_1c"
+) -> None:
+
+    verify(bqjsonservicefile, bqdataset, bqtable)
 
 if __name__ == "__main__":
     app()

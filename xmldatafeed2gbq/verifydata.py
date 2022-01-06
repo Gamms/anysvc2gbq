@@ -84,7 +84,7 @@ def verify_last_month(b):
     querytotal = (
         "select date,day,week,month,year,Unit,Sum(Value) Value,Sum(ValueOld) ValueOld from ("
         + querytotal
-        + ") as grp Group by date,day,week,month,year,Unit Order by date,Unit"
+        + ") as grp Group by date,day,week,month,year,Unit Order by Unit,date"
     )
 
     resultquery = bq_method.SelectQuery(
@@ -116,9 +116,11 @@ def verify_last_month(b):
         tag = "normal"
         DeltaPercent = "N/A"
         if row.ValueOld != 0.0:
-            DeltaPercent = 100 - row.ValueOld / row.Value * 100
-            if DeltaPercent > 10 or DeltaPercent < -10:
-                tag = "red"
+            if row.Value!= 0.0:
+                DeltaPercent = 100 - row.ValueOld / row.Value * 100
+                if DeltaPercent > 10 or DeltaPercent < -10:
+                    tag = "red"
+
 
         my_game.insert(
             parent="",

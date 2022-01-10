@@ -44,7 +44,7 @@ def upload_from_1c(
     bq_method.DeleteRowFromTable(bqtable, bqdataset, bqjsonservicefile, filterList)
 
     for datestock in daterange(datestock_start, datestock_end):
-
+        logger.info(f"Получение остатков из 1С {datestock.strftime('%d-%m-%Y')}.")
         query.SetParameter(
             "ДатаОстатковНачало",
             v83.newObject(

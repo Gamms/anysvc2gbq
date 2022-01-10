@@ -21,13 +21,13 @@ app = typer.Typer(
 console = Console()
 
 
-class periodOption(Enum):
-    last_day = 1
-    last_2day = 2
-    last_week = 3
-    last_month = 4
-    last_quarter = 5
-    manual = 6
+class periodOption(str, Enum):
+    last_day = "last_day"
+    last_2day = "last_2day"
+    last_week = "last_week"
+    last_month = "last_month"
+    last_quarter = "last_quarter"
+    manual = "manual"
 
 
 def version_callback(print_version: bool) -> None:
@@ -72,7 +72,7 @@ def uploadfrom1C(
     bqjsonservicefile: str,
     bqdataset: str = "DB1C",
     bqtable: str = "tableentry1c",
-    period_option: periodOption = 1,
+    period_option: periodOption = periodOption.last_2day,
     datestock_start_str: str = "",
     datestock_end_str: str = "",
 ) -> None:
@@ -110,13 +110,17 @@ def verifydata(
 
     verify(bqjsonservicefile, bqdataset, bqtable)
 
+
 @logger.catch
 @app.command()
 def gui(
-    bqjsonservicefile: str='polar.json', bqdataset: str = "DB2019", bqtable: str = "wb_ozon_1c"
+    bqjsonservicefile: str = "polar.json",
+    bqdataset: str = "DB2019",
+    bqtable: str = "wb_ozon_1c",
 ) -> None:
 
     verify(bqjsonservicefile, bqdataset, bqtable)
+
 
 if __name__ == "__main__":
     app()

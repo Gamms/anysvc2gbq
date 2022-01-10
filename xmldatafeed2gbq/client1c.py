@@ -4,16 +4,13 @@ from datetime import timedelta
 import bq_method
 import win32com.client
 from loguru import logger
-
+from common_type import Struct
 
 def daterange(start_date, end_date):
     for n in range(int((end_date - start_date).days) + 1):
         yield start_date + timedelta(n)
 
 
-class Struct:
-    def __init__(self, **entries):
-        self.__dict__.update(entries)
 
 
 def upload_from_1c(

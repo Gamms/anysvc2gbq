@@ -81,7 +81,7 @@ def uploadfrom1C(
         datestock_end = datetime.datetime.now()
     elif period_option == periodOption.last_2day:
         datestock_end = datetime.datetime.now()
-        datestock_start = datetime.datetime.now() - relativedelta(days=1)
+        datestock_start = datetime.datetime.now() - relativedelta(days=1, second=1)
     elif period_option == periodOption.last_week:
         datestock_end = datetime.datetime.now()
         datestock_start = datetime.datetime.now() - relativedelta(weeks=1)

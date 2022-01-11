@@ -70,7 +70,7 @@ class App(tk.Tk):
         bqtable='tranv32022'
         fieldname = 'operation_date'
         ozon_data_filter_type = ozon_method.OzonDataFilterType.date
-        self.update_transaction_orders_by_period(apimethods, bqtable, method,fieldname,ozon_data_filter_type)
+        self.update_transaction_orders_by_period(bqtable, method,fieldname,ozon_data_filter_type)
 
         pass
     def ozon_update_fboorders_by_period(self,bt):
@@ -79,7 +79,7 @@ class App(tk.Tk):
         bqtable='fbo_orders2021'
         fieldname = 'created_at'
         ozon_data_filter_type = ozon_method.OzonDataFilterType.order_created_at
-        self.update_transaction_orders_by_period(apimethods, bqtable, method,fieldname,ozon_data_filter_type)
+        self.update_transaction_orders_by_period(bqtable, method,fieldname,ozon_data_filter_type)
 
         pass
     def ozon_update_orders_by_period(self,bt):

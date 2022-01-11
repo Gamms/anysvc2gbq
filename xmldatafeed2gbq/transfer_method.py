@@ -53,7 +53,7 @@ def export_orders_from_ozon2bq_updated_in_the_period(datarange, bqdataset, bqjso
             logger.info(text)
 
 
-    def transfer_orders_transaction_ozon2bq_in_the_period(daterange, bqdataset, bqjsonservicefile, bqtable, configyml,
+def transfer_orders_transaction_ozon2bq_in_the_period(daterange, bqdataset, bqjsonservicefile, bqtable, configyml,
                                                           fieldname, method, ozon_data_filter_type):
         apimethods = ozon_method.apimethods
         with open(configyml) as f:

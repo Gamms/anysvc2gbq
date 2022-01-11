@@ -122,15 +122,39 @@ class App(tk.Tk):
         self.date_to_element.pack(side=LEFT, padx=10, pady=10)
 
     def wb_orders_update(self, bt):
+        method='orders'
+        bqtable='orders'
+        option='changes'
+        wb_export(method,            bqtable,            option        )
         pass
 
     def wb_orders_period(self, bt):
+        method='orders'
+        bqtable='orders'
+        option='byPeriod'
+        datefrom = self.date_from_element.get_date()
+        dateto = self.date_to_element.get_date()
+
+        wb_export(method,            bqtable,            option,datefromstr=datefrom.isoformat(),datetostr=dateto.isoformat()       )
         pass
 
     def wb_sale_update(self, bt):
+        method='sales'
+        bqtable='sales'
+        option='changes'
+        wb_export(method,            bqtable,            option        )
+
         pass
 
     def wb_sale_period(self, bt):
+        method='sales'
+        bqtable='sales'
+        option='byPeriod'
+        datefrom = self.date_from_element.get_date()
+        dateto = self.date_to_element.get_date()
+
+        wb_export(method,            bqtable,            option ,datefromstr=datefrom.isoformat(),datetostr=dateto.isoformat()       )
+
         pass
 
     def select_tab(self, event):

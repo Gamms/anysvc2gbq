@@ -4,7 +4,6 @@ import time
 import requests
 from dateutil import parser
 from loguru import logger
-from wb_method import addSharedField, parse_float, parse_int
 
 
 class WBApiClient:
@@ -233,3 +232,19 @@ def transform_res2js(filter_field_date, res, datefrom, wb_id, option, dateto):
 def addSharedField(el, wb_id):
     el["wb_id"] = wb_id
     el["dateExport"] = datetime.datetime.today().isoformat()
+
+def parse_int(s):
+    try:
+        res = int(eval(str(s)))
+        if type(res) == int:
+            return res
+    except:
+        return 0
+
+def parse_float(s):
+    try:
+        res = float(eval(str(s)))
+        if type(res) == float:
+            return res
+    except:
+        return 0.0

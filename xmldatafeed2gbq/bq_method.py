@@ -1,10 +1,33 @@
 import datetime
 import os
 
-from loguru import logger
 import pytz
 from google.cloud import bigquery as bq
 from google.oauth2 import service_account
+from loguru import logger
+
+
+def get_schema_bqtable_from_config_file(dataset_id, tableid):
+    schema = []
+    with open("bqfields.yml") as f:
+        field_config = yaml.safe_load(f)
+    for dataset, datasetconfig in field_config["dataset"].items():
+        if dataset == dataset_id:
+            for table, tableconfig in datasetconfig.items():
+                if table == tableid:
+                    fields_dict = {}
+                    for fields, type in tableconfig.items():
+                        fields_dict[fields] = type
+                    schema = get_schema_field_from_dict(fields_dict)
+                    break
+    return schema
+
+
+def get_schema_field_from_dict(fields: dict) -> list:
+    schema = []
+    for name, type in fields.items():
+        schema.append(bq.SchemaField(name, type))
+    return schema
 
 
 def export_js_to_bq(js, tableid, key_path, dataset_id, loger, fields_list):
@@ -19,6 +42,9 @@ def export_js_to_bq(js, tableid, key_path, dataset_id, loger, fields_list):
     job_config = bq.LoadJobConfig()
     # Schema autodetection enabled
     schema = get_schema_bqtable_from_list(fields_list)
+    if schema == []:
+        schema = get_schema_bqtable_from_config_file(dataset_id, tableid)
+
     if schema != []:
         job_config.schema = schema
     else:
@@ -176,7 +202,7 @@ def DeleteRowFromTable(table_id, dataset_id, key_path, filtersList: list):
     try:
         query = f"Delete FROM `{fulltableid}` where True"
         for elFilter in filtersList:
-            if elFilter["operator"] == ' IN ':
+            if elFilter["operator"] == " IN ":
                 query = (
                     query
                     + f' and CAST({elFilter["fieldname"]} as STRING){elFilter["operator"]}({elFilter["value"]})'

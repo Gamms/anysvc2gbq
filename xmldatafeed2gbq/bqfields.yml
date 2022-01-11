@@ -1,0 +1,46 @@
+dataset:
+ wb:     
+  sales: 
+   dateExport: TIMESTAMP
+   gNumber: FLOAT
+   brand: STRING
+   subject: STRING
+   forPay: FLOAT
+   discountPercent: INTEGER
+   odid: INTEGER
+   saleID: STRING
+   priceWithDisc: FLOAT
+   supplierArticle: STRING
+   incomeID: INTEGER
+   IsStorno: INTEGER
+   regionName: STRING
+   spp: INTEGER
+   oblastOkrugName: STRING
+   countryName: STRING
+   totalPrice: FLOAT
+   category: STRING
+   warehouseName: STRING
+   date: TIMESTAMP
+   isRealization: BOOLEAN
+   wb_id: STRING
+   nmId: INTEGER
+   quantity: INTEGER
+   isSupply: BOOLEAN
+   promoCodeDiscount: INTEGER
+   barcode: INTEGER
+   techSize: INTEGER
+   orderId: INTEGER
+   finishedPrice: FLOAT
+   lastChangeDate: TIMESTAMP
+  stocks_v2:
+   brand: STRING
+   name: STRING
+   size: STRING
+   barcode: STRING
+   article: STRING
+   stock: INTEGER
+   warehouseName: STRING
+   warehouseId: INTEGER
+   date_stocks: DATE
+   wb_id: STRING
+   dateExport: TIMESTAMP

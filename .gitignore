@@ -618,3 +618,4 @@ MigrationBackup/
 /xmldatafeed2gbq/polar.json
 /xmldatafeed2gbq/client1C_config.yml
 /poetry.lock
+/xmldatafeed2gbq/config_wb.yml

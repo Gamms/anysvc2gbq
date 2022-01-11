@@ -4,6 +4,10 @@ import datetime
 import time
 from loguru import logger
 from dateutil import parser
+from common_type import Struct
+from enum import Enum
+
+
 timeout = 60  # таймаут 60 секунд
 apimethods = {'transaction': 'https://api-seller.ozon.ru/v2/finance/transaction/list',
               'transactionv3': 'https://api-seller.ozon.ru/v3/finance/transaction/list',
@@ -12,11 +16,19 @@ apimethods = {'transaction': 'https://api-seller.ozon.ru/v2/finance/transaction/
               'fbo_orders': 'https://api-seller.ozon.ru/v2/posting/fbo/list',
               'price': 'https://api-seller.ozon.ru/v1/product/info/prices'}
 
+data_filter_type=Struct
 
-def ozon_import(method,apimethods, apikey,clientid,ozonid,datefrom,dateto):
+class OzonDataFilterType(str,Enum):
+    order_created_at = 'order_created_at' #order
+    in_process_at = 'in_process_at' #order
+    updated_at = 'updated_at' #order
+    date = 'date' #transaction
+    since = 'since' #fboorders
+
+def ozon_import(method,apimethods, apikey,clientid,ozonid,datefrom,dateto,ozon_data_filter_type:OzonDataFilterType):
     #делаем 5 попыток с паузой 1 минута, если не вышло пропускаем
 
-    items = query(apimethods, apikey, clientid,method,ozonid,datefrom,dateto)
+    items = query(apimethods, apikey, clientid,method,ozonid,datefrom,dateto,ozon_data_filter_type)
 
     return items
 
@@ -26,10 +38,10 @@ def checkTypeFieldFloat(newdict, elfield):
         newdict[elfield] = parse_float(newdict[elfield])
 
 
-def query(apiuri, apikey,clientid,method,ozon_id,datefrom,dateto):
+def query(apiuri, apikey,clientid,method,ozon_id,datefrom,dateto,ozon_data_filter_type:OzonDataFilterType):
     page = 1
     querycount = 1000
-    data,querycount = makedata(page, querycount,method,datefrom,dateto)
+    data,querycount = makedata(page, querycount,method,datefrom,dateto,ozon_data_filter_type)
     headers = {'Api-Key': apikey, 'Client-Id': clientid}
     res = make_query('post', apiuri, data, headers)
     js = json.loads(res.text)
@@ -39,7 +51,7 @@ def query(apiuri, apikey,clientid,method,ozon_id,datefrom,dateto):
     while len(items) == querycount:
         # количество записей видимо больше запросим следующую страниц
             page=page+1            #
-            data,querycount = makedata(page, querycount,method,datefrom,dateto)
+            data,querycount = makedata(page, querycount,method,datefrom,dateto,ozon_data_filter_type)
             res = make_query('post', apiuri, data, headers)
             js = json.loads(res.text)
             items = datablock_from_js(js, method)
@@ -69,8 +81,12 @@ def query(apiuri, apikey,clientid,method,ozon_id,datefrom,dateto):
                         newdict=newdict| el['barcodes']
                     newdict['ozon_id'] = ozon_id
                     newdict['dateExport'] = datetime.datetime.today().isoformat()
-                    for elfield in ['total_discount_value','old_price']:
-                        checkTypeFieldFloat(newdict, elfield)
+                    if method=='orders':
+                        for elfield in ['total_discount_value','old_price','marketplace_service_item_deliv_to_customer']:
+                            checkTypeFieldFloat(newdict, elfield)
+                    if method == 'fbo_orders':
+                        for elfield in ['total_discount_value', 'old_price']:
+                            checkTypeFieldFloat(newdict, elfield)
 
                     for product in el['products']:
                         if product['sku']==newdict['product_id']:
@@ -155,24 +171,25 @@ def datablock_from_js(js, method):
     return items
 
 
-def makedata(page, querycount,method,datefrom,dateto):
+def makedata(page, querycount,method,datefrom,dateto,ozon_data_filter_type:OzonDataFilterType):
     datefromstr=datefrom.strftime("%Y-%m-%dT%H:%M:%S.000Z")
-    datetostr = dateto.strftime("%Y-%m-%dT%H:%M:%S.000Z")
+    datetostr = dateto.strftime("%Y-%m-%dT23:59:59.000Z")
     if method == 'stock' or method=='price':
         data = f'{{"page": {page},"page_size": {querycount}}}'
-    elif method == 'transaction' or method == 'transactionv3' :
+    elif ozon_data_filter_type==OzonDataFilterType.date:
         #data =  f'{{"filter": {{"date": {{"from": "2020-01-01T00:00:00.999Z","to": "2020-12-31T23:59:59.999Z"}},'\
         data = f'{{"filter": {{"date": {{"from": "{datefromstr}","to": "{datetostr}"}},' \
                 f'"transaction_type": "all"}}'\
                 f',"page": {page},"page_size": {querycount}}}'
-    elif method == 'orders':
-        querycount=1000
-        ofset=(page-1)*querycount
-        data = f'{{"dir": "asc","filter": {{"order_created_at":{{"from": "{datefromstr}","to": "{datetostr}"}}}},"offset": {ofset},"limit": {querycount},"with": {{"barcodes":true,"financial_data": true,"analytics_data": true}}}}'
-    elif method == 'fbo_orders':
+    elif ozon_data_filter_type == OzonDataFilterType.since: #fbo orders
         querycount=1000
         ofset=(page-1)*querycount
         data = f'{{"dir": "asc","filter": {{"since": "{datefromstr}","to": "{datetostr}"}},"offset": {ofset},"limit": {querycount},"with": {{"barcodes":true,"financial_data": true,"analytics_data": true}}}}'
+
+    else: #orders created_at
+        querycount=1000
+        ofset=(page-1)*querycount
+        data = f'{{"dir": "asc","filter": {{"{ozon_data_filter_type.name}":{{"from": "{datefromstr}","to": "{datetostr}"}}}},"offset": {ofset},"limit": {querycount},"with": {{"barcodes":true,"financial_data": true,"analytics_data": true}}}}'
     return data,querycount
 
 
@@ -240,6 +257,47 @@ def fields_from_method(method):
         csvfields.append({"services_price_total": "FLOAT"})
         csvfields.append({"ozon_id": "STRING"})
         csvfields.append({"dateExport": "TIMESTAMP"})
+    elif method=='___orders' or method=='___fbo_orders':
+        csvfields = []
+        csvfields.append({"payment_type_group_name": "STRING"})
+        csvfields.append({"delivery_type": "STRING"})
+        csvfields.append({"city": "STRING"})
+        csvfields.append({"lower_barcode": "INTEGER"})
+        csvfields.append({"upper_barcode": "STRING"})
+        csvfields.append({"marketplace_service_item_return_after_deliv_to_customer": "INTEGER"})
+        csvfields.append({"marketplace_service_item_return_part_goods_customer": "INTEGER"})
+        csvfields.append({"marketplace_service_item_return_not_deliv_to_customer": "INTEGER"})
+        csvfields.append({"marketplace_service_item_direct_flow_trans": "INTEGER"})
+        csvfields.append({"marketplace_service_item_dropoff_ff": "INTEGER"})
+        csvfields.append({"marketplace_service_item_deliv_to_customer": "INTEGER"})
+        csvfields.append({"marketplace_service_item_pickup": "INTEGER"})
+        csvfields.append({"client_price": "STRING"})
+        csvfields.append({"quantity": "INTEGER"})
+        csvfields.append({"marketplace_service_item_return_flow_trans": "INTEGER"})
+        csvfields.append({"marketplace_service_item_dropoff_pvz": "INTEGER"})
+        csvfields.append({"picking": "STRING"})
+        csvfields.append({"is_premium": "BOOL"})
+        csvfields.append({"marketplace_service_item_dropoff_sc": "INTEGER"})
+        csvfields.append({"shipment_date": "TIMESTAMP"})
+        csvfields.append({"total_discount_percent": "FLOAT"})
+        csvfields.append({"old_price": "FLOAT"})
+        csvfields.append({"price": "INTEGER"})
+        csvfields.append({"marketplace_service_item_fulfillment": "INTEGER"})
+        csvfields.append({"product_id": "INTEGER"})
+        csvfields.append({"region": "STRING"})
+        csvfields.append({"order_number": "STRING"})
+        csvfields.append({"commission_percent": "INTEGER"})
+        csvfields.append({"payout": "FLOAT"})
+        csvfields.append({"in_process_at": "TIMESTAMP"})
+        csvfields.append({"created_at": "TIMESTAMP"})
+        csvfields.append({"order_id": "TIMESTAMP"})
+        csvfields.append({"posting_number": "STRING"})
+        csvfields.append({"cancel_reason_id": "INTEGER"})
+        csvfields.append({"commission_amount": "FLOAT"})
+        csvfields.append({"status": "STRING"})
+        csvfields.append({"offer_id": "STRING"})
+        csvfields.append({"offer_name": "STRING"})
+
     else:
         csvfields = []
     return csvfields

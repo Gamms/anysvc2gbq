@@ -7,12 +7,12 @@ import ozon_method
 import bq_method
 import yaml
 from loguru import logger
-
+import transfer_method
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Google big query export")
-        self.notebook = ttk.Notebook(self, width=500, height=100, padding=10)
+        self.notebook = ttk.Notebook(self, width=500, height=400, padding=10)
         frame = ttk.Frame(self.notebook)
         self.notebook.add(frame, text='Ozon', underline=0,
                               sticky=tk.NE + tk.SW)
@@ -20,10 +20,24 @@ class App(tk.Tk):
         frame_top.pack(side=TOP)
         frame_top1=ttk.Frame(frame)
         frame_top1.pack(side=TOP)
+        frame_top1left=ttk.Frame(frame_top1)
+        frame_top1left.pack(side=LEFT)
+        frame_top1right=ttk.Frame(frame_top1)
+        frame_top1right.pack(side=RIGHT)
 
-        b1 = ttk.Button(frame_top1,text="Ozon transaction v3")
+        b1 = ttk.Button(frame_top1left,text="Ozon transaction v3")
         b1.bind("<Button-1>", self.ozon_update_transactionv3)
         b1.pack(side=TOP,padx=1,pady=1)
+
+        b2 = ttk.Button(frame_top1right,text="Ozon orders v2 updated")
+        b2.bind("<Button-1>", self.ozon_update_orders)
+        b2.pack(side=TOP,padx=1,pady=1)
+        b2 = ttk.Button(frame_top1left,text="Ozon fboorders_by_period")
+        b2.bind("<Button-1>", self.ozon_update_fboorders_by_period)
+        b2.pack(side=TOP,padx=1,pady=1)
+        b2 = ttk.Button(frame_top1left,text="Ozon orders_by_period")
+        b2.bind("<Button-1>", self.ozon_update_orders_by_period)
+        b2.pack(side=TOP,padx=1,pady=1)
 
         ttk.Label(frame_top, text='Date from').pack(side=LEFT, padx=10, pady=10)
         self.date_from_element = DateEntry(frame_top,locale='ru_RU', date_pattern='dd-mm-y', width=12, background='darkblue',
@@ -54,62 +68,55 @@ class App(tk.Tk):
         apimethods = ozon_method.apimethods
         method='transactionv3'
         bqtable='tranv32022'
+        fieldname = 'operation_date'
+        ozon_data_filter_type = ozon_method.OzonDataFilterType.date
+        self.update_transaction_orders_by_period(bqtable, method,fieldname,ozon_data_filter_type)
+
+        pass
+    def ozon_update_fboorders_by_period(self,bt):
+        apimethods = ozon_method.apimethods
+        method='fbo_orders'
+        bqtable='fbo_orders2021'
+        fieldname = 'created_at'
+        ozon_data_filter_type = ozon_method.OzonDataFilterType.order_created_at
+        self.update_transaction_orders_by_period(bqtable, method,fieldname,ozon_data_filter_type)
+
+        pass
+    def ozon_update_orders_by_period(self,bt):
+        method='orders'
+        bqtable='orders2021'
+        fieldname = 'created_at'
+        ozon_data_filter_type = ozon_method.OzonDataFilterType.order_created_at
+        self.update_transaction_orders_by_period(bqtable, method,fieldname,ozon_data_filter_type)
+
+        pass
+
+    def update_transaction_orders_by_period(self,  bqtable, method,                    fieldname,ozon_data_filter_type):
+        bqdataset = 'OZON'
+        bqjsonservicefile = 'polar.json'
+        configyml = 'config_ozone.yml'
+        datefrom = self.date_from_element.get_date()
+        dateto = self.date_to_element.get_date()
+        daterange={'datefrom':datefrom,'dateto':dateto}
+
+        transfer_method.transfer_orders_transaction_ozon2bq_in_the_period(daterange,bqdataset, bqjsonservicefile, bqtable, configyml,
+                                                                fieldname, method, ozon_data_filter_type)
+
+
+    def ozon_update_orders(self,bt):
+        method='orders'
+        bqtable='orders2021'
         bqdataset='OZON'
         bqjsonservicefile='polar.json'
         configyml='config_ozone.yml'
-        with open(configyml) as f:
-            config = yaml.safe_load(f)
-        for lkConfig in config['lks']:
-            ozonid=lkConfig['lk']['bq_id']
-            apikey = lkConfig['lk']['apikey']
-            clientid = lkConfig['lk']['clientid']
-
-            logger.info(f'Начало импорта из OZON {ozonid}:')
-            datefrom=self.date_from_element.get_date()
-            dateto=self.date_to_element.get_date()
-
-            try:
-            #   js=ozon_method.ozon_import(apimethods.get(method),apikey,LOG_FILE,dateimport,maxdatechange)
-                #clientid='44346'
-
-                items=ozon_method.ozon_import(method,apimethods.get(method), apikey,clientid,ozonid,datefrom,dateto)
-                if len(items)!=0:
-                    logger.info(f'Чистим  данные в {bqtable} c {datefrom} по {dateto}')
-                    fieldname = 'operation_date'
-                    filterList = []
-                    filterList.append(
-                        {
-                            "fieldname": "ozon_id",
-                            "operator": "=",
-                            "value": ozonid,
-                        }
-                    )
-
-                    filterList.append(
-                        {
-                            "fieldname": fieldname,
-                            "operator": ">=",
-                            "value": datefrom.strftime("%Y-%m-%d"),
-                        }
-                    )
-                    filterList.append(
-                        {
-                            "fieldname": fieldname,
-                            "operator": "<=",
-                            "value": dateto.strftime("%Y-%m-%d"),
-                        }
-                    )
-                    bq_method.DeleteRowFromTable(bqtable, bqdataset, bqjsonservicefile, filterList)
-                    fields_list=ozon_method.fields_from_method(method)
-                    bq_method.export_js_to_bq(items, bqtable, bqjsonservicefile, bqdataset,logger,fields_list)
-                else:
-                    logger.info(f'Данных нет {method} c {datefrom} по {dateto}')
+        datefrom = self.date_from_element.get_date()
+        dateto = self.date_to_element.get_date()
+        daterange={'datefrom':datefrom,'dateto':dateto}
+        textresult=transfer_method.export_orders_from_ozon2bq_updated_in_the_period(daterange, bqdataset, bqjsonservicefile, bqtable,
+                                                              configyml, method)
 
 
-            except Exception as e:
-                logger.exception("Ошибка выполнения."+e.__str__())
 
-        pass
 
 
 if __name__ == "__main__":

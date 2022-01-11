@@ -176,7 +176,13 @@ def DeleteRowFromTable(table_id, dataset_id, key_path, filtersList: list):
     try:
         query = f"Delete FROM `{fulltableid}` where True"
         for elFilter in filtersList:
-            if type(elFilter["value"]) is str:
+            if elFilter["operator"] == ' IN ':
+                query = (
+                    query
+                    + f' and CAST({elFilter["fieldname"]} as STRING){elFilter["operator"]}({elFilter["value"]})'
+                )
+
+            elif type(elFilter["value"]) is str:
                 query = (
                     query
                     + f' and {elFilter["fieldname"]}{elFilter["operator"]}"{elFilter["value"]}"'

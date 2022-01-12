@@ -19,10 +19,10 @@ def verify(bqjsonservicefile="polar.json", bqdataset="DB2019", bqtable="ozon_wb_
 
     b1 = ttk.Button(text="Verify last mont")
     b1.bind("<Button-1>", verify_last_month)
-    b1.pack()
+    b1.pack(side=LEFT)
     b2 = ttk.Button(text="Verify last week")
     b2.bind("<Button-1>", verify_last_week)
-    b2.pack()
+    b2.pack(side=LEFT)
 
     ws.mainloop()
 
@@ -95,7 +95,8 @@ def verify_last_month(b):
         querytotal,
     )
     game_frame = Frame(ws)
-    game_frame.pack()
+    game_frame.pack(expand=True, fill="y")
+
     my_game = ttk.Treeview(game_frame)
     my_game["columns"] = ("Period", "Unit", "Value_LK", "Value_LK_OLD", "DeltaPercent")
     my_game.column("#0", width=0, stretch=NO)
@@ -116,11 +117,10 @@ def verify_last_month(b):
         tag = "normal"
         DeltaPercent = "N/A"
         if row.ValueOld != 0.0:
-            if row.Value!= 0.0:
+            if row.Value != 0.0:
                 DeltaPercent = 100 - row.ValueOld / row.Value * 100
                 if DeltaPercent > 10 or DeltaPercent < -10:
                     tag = "red"
-
 
         my_game.insert(
             parent="",
@@ -132,7 +132,7 @@ def verify_last_month(b):
         )
         count = count + 1
     my_game.tag_configure("red", background="red")
-    my_game.pack()
+    my_game.pack(expand=True, fill="y")
     ws.mainloop()
     pass
 

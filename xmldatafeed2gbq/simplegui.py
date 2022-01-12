@@ -11,7 +11,7 @@ import yaml
 from dateutil import parser
 from loguru import logger
 from tkcalendar import DateEntry
-
+from dateutil.relativedelta import relativedelta
 
 class App(tk.Tk):
     def __init__(self):
@@ -238,7 +238,7 @@ def wb_export(
     bqtable,
     option,
     jsonkey="polar.json",
-    datasetid="WB",
+    datasetid="wb",
     configyml="config_wb.yml",
     datefromstr="",
     datetostr="",
@@ -388,7 +388,7 @@ def wb_export(
                     method,
                     bqtable,
                     wb_id,
-                    option,
+                    option,orders
                 )
                 logger.info(f"Загружаем записи {method} из WB с {datefrom}:")
                 bq_method.export_js_to_bq(
@@ -409,7 +409,7 @@ def clean_table_if_necessary(
     method,
     tablebq,
     wb_id,
-    option,
+    option,items
 ):
     filterList = []
     if option == "byPeriod":
@@ -430,6 +430,32 @@ def clean_table_if_necessary(
         filterList.append({"fieldname": "wb_id", "operator": "=", "value": wb_id})
         loger.info(f"чистим записи {method} в bq с {datefrom}:")
         bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
+    if option == "changes":
+        logger.info(f'Чистим  данные в {tablebq} по {len(items)} заказам')
+        fieldname = 'operation_date'
+        filterList = []
+        filterList.append(
+            {
+                "fieldname": "wb_id",
+                "operator": "=",
+                "value": wb_id,
+            }
+        )
+        orderidlist = ''
+        for elitems in items:
+            if orderidlist != '':
+                orderidlist = orderidlist + ','
+            odid = elitems['odid']
+            orderidlist = orderidlist + f"'{odid}'"
+
+        filterList.append(
+            {
+                "fieldname": "odid",
+                "operator": " IN ",
+                "value": orderidlist,
+            }
+        )
+        bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
 
 
 def fill_date(
@@ -449,7 +475,7 @@ def fill_date(
         dateto = parser.parse(datetostr)
 
     if datefromstr == "":
-        datefrom = datetime.datetime(dateto.year, dateto.month - 1, 1, 0, 0, 0)
+        datefrom = dateto-relativedelta(months=1)
     else:
         datefrom = parser.parse(datefromstr)
     if option == "changes":

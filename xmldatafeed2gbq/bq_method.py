@@ -5,7 +5,7 @@ import pytz
 from google.cloud import bigquery as bq
 from google.oauth2 import service_account
 from loguru import logger
-
+import yaml
 
 def get_schema_bqtable_from_config_file(dataset_id, tableid):
     schema = []

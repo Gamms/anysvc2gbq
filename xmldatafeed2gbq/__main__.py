@@ -15,6 +15,7 @@ from verifydata import verify
 from xmldatafeed import xmldatafeed
 from common_type import periodOption
 from ozon_method import OzonDataFilterType
+from enum import Enum
 folderLog = "log/"
 app = typer.Typer(
     name="xmldatafeed2gbq",
@@ -134,10 +135,10 @@ def gui(
 
 @logger.catch
 @app.command()
-def upload_from_ozon2bq(operation:ozonOperation,date_filter_field:OzonDataFilterType=OzonDataFilterType.updated_at,period_option: periodOption = periodOption.last_2day,
+def upload_from_ozon2bq(operation:ozonOperation,bqtable: str,date_filter_field:OzonDataFilterType=OzonDataFilterType.updated_at,period_option: periodOption = periodOption.last_2day,
     datestock_start_str: str = "",
     datestock_end_str: str = "",
-    bqjsonservicefile: str='polar.json', bqdataset: str = "DB2019", bqtable: str = "wb_ozon_1c",configyml:str='config_ozon.yml'
+    bqjsonservicefile: str='polar.json', bqdataset: str = "OZON", configyml:str='config_ozon.yml'
 ) -> None:
     daterange = fill_daterange_from_option(datestock_end_str, datestock_start_str, period_option)
     if operation==ozonOperation.transaction:

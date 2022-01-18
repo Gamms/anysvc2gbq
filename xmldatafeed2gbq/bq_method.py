@@ -114,7 +114,9 @@ def GetMaxRecord(table_id, dataset_id, key_path, wb_id, field):
     bigquery_client = bq.Client()
     try:
 
-        query = f'SELECT Max(`{field}`) as MaxlastChangeDate  FROM `{fulltableid}` where wb_id="{wb_id}"'
+        query = f'SELECT Max(`{field}`) as MaxlastChangeDate  FROM `{fulltableid}`'
+        if wb_id!='':
+            query=query+f' where wb_id = "{wb_id}"'
         job_query = bigquery_client.query(query, project=credentials.project_id)
         results = job_query.result()
         maxdate = datetime.date(1, 1, 1)
@@ -125,7 +127,8 @@ def GetMaxRecord(table_id, dataset_id, key_path, wb_id, field):
         maxdate = datetime.datetime(1, 1, 1)
     if maxdate == None:
         maxdate = datetime.datetime(1, 1, 1)
-    maxdate = maxdate.replace(tzinfo=pytz.UTC)
+    if isinstance(maxdate,datetime.datetime):
+        maxdate = maxdate.replace(tzinfo=pytz.UTC)
     return maxdate
 
 

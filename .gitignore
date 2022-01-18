@@ -619,4 +619,4 @@ MigrationBackup/
 /xmldatafeed2gbq/client1C_config.yml
 /poetry.lock
 /xmldatafeed2gbq/config_wb.yml
-/xmldatafeed2gbq/config_ozone.yml
+/xmldatafeed2gbq/config_ozon.yml

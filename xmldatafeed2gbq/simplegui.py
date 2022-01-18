@@ -2,7 +2,8 @@ import datetime
 import tkinter as tk
 from tkinter import *
 from tkinter import ttk
-
+import logging
+import queue
 import bq_method
 import ozon_method
 import transfer_method
@@ -11,13 +12,74 @@ import yaml
 from dateutil import parser
 from loguru import logger
 from tkcalendar import DateEntry
+from tkinter.scrolledtext import ScrolledText
 from dateutil.relativedelta import relativedelta
+
+class QueueHandler(logging.Handler):
+    """Class to send logging records to a queue
+    It can be used from different threads
+    The ConsoleUi class polls this queue to display records in a ScrolledText widget
+    """
+    # Example from Moshe Kaplan: https://gist.github.com/moshekaplan/c425f861de7bbf28ef06
+    # (https://stackoverflow.com/questions/13318742/python-logging-to-tkinter-text-widget) is not thread safe!
+    # See https://stackoverflow.com/questions/43909849/tkinter-python-crashes-on-new-thread-trying-to-log-on-main-thread
+
+    def __init__(self, log_queue):
+        super().__init__()
+        self.log_queue = log_queue
+
+    def emit(self, record):
+        self.log_queue.put(record)
+
+class ConsoleUi:
+    """Poll messages from a logging queue and display them in a scrolled text widget"""
+
+    def __init__(self, frame):
+        self.frame = frame
+        # Create a ScrolledText wdiget
+        self.scrolled_text = ScrolledText(frame, state='disabled', height=12)
+        self.scrolled_text.grid(row=0, column=0, sticky=(N, S, W, E))
+        self.scrolled_text.configure(font='TkFixedFont')
+        self.scrolled_text.tag_config('INFO', foreground='black')
+        self.scrolled_text.tag_config('DEBUG', foreground='gray')
+        self.scrolled_text.tag_config('WARNING', foreground='orange')
+        self.scrolled_text.tag_config('ERROR', foreground='red')
+        self.scrolled_text.tag_config('CRITICAL', foreground='red', underline=1)
+        # Create a logging handler using a queue
+        self.log_queue = queue.Queue()
+        self.queue_handler = QueueHandler(self.log_queue)
+
+        logger.add(self.queue_handler)
+
+        self.frame.after(100, self.poll_log_queue)
+
+    def display(self, record):
+        msg = self.queue_handler.format(record)
+        self.scrolled_text.configure(state='normal')
+        self.scrolled_text.insert(tk.END, msg + '\n', record.levelname)
+        self.scrolled_text.configure(state='disabled')
+        # Autoscroll to the bottom
+        self.scrolled_text.yview(tk.END)
+
+    def poll_log_queue(self):
+        # Check every 100ms if there is a new message in the queue to display
+        while True:
+            try:
+                record = self.log_queue.get(block=False)
+            except queue.Empty:
+                break
+            else:
+                self.display(record)
+        self.frame.after(100, self.poll_log_queue)
 
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
         self.title("Google big query export")
         self.notebook = ttk.Notebook(self, width=500, height=400, padding=10)
+        self.entryList=[]
+        self.entry_dict={}
+
         self.add_frame_ozone()
         self.add_frame_wb()
         frame = ttk.Frame(self.notebook)
@@ -29,8 +91,15 @@ class App(tk.Tk):
         self.notebook.enable_traversal()
         self.notebook.bind("<<NotebookTabChanged>>", self.select_tab)
 
+        console_frame = ttk.Labelframe(self, text="Console")
+        console_frame.columnconfigure(0, weight=1)
+        console_frame.rowconfigure(0, weight=1)
+        self.console = ConsoleUi(console_frame)
+        self.console.frame.pack()
+
     def add_frame_ozone(self):
         frame = ttk.Frame(self.notebook)
+        entrydict={}
         self.notebook.add(frame, text="Ozon", underline=0, sticky=tk.NE + tk.SW)
         frame_top = ttk.Frame(frame)
         frame_top.pack(side=TOP)
@@ -52,8 +121,15 @@ class App(tk.Tk):
         b2 = ttk.Button(frame_top1left, text="Ozon orders_by_period")
         b2.bind("<Button-1>", self.ozon_update_orders_by_period)
         b2.pack(side=TOP, padx=1, pady=1)
+        b2 = ttk.Button(frame_top1left, text="Get max from ozone orders")
+        b2.bind("<Button-1>", self.get_max_ozon_orders)
+        b2.pack(side=TOP, padx=1, pady=1)
+        b2 = ttk.Button(frame_top1left, text="Get max from ozone transaction")
+        b2.bind("<Button-1>", self.get_max_ozon_trn)
+        b2.pack(side=TOP, padx=1, pady=1)
+
         ttk.Label(frame_top, text="Date from").pack(side=LEFT, padx=10, pady=10)
-        self.date_from_element = DateEntry(
+        date_from_element = DateEntry(
             frame_top,
             locale="ru_RU",
             date_pattern="dd-mm-y",
@@ -62,9 +138,9 @@ class App(tk.Tk):
             foreground="white",
             borderwidth=2,
         )
-        self.date_from_element.pack(side=LEFT, padx=10, pady=10)
+        date_from_element.pack(side=LEFT, padx=10, pady=10)
         ttk.Label(frame_top, text="to").pack(side=LEFT, padx=10, pady=10)
-        self.date_to_element = DateEntry(
+        date_to_element = DateEntry(
             frame_top,
             locale="ru_RU",
             date_pattern="dd-mm-y",
@@ -73,7 +149,33 @@ class App(tk.Tk):
             foreground="white",
             borderwidth=2,
         )
-        self.date_to_element.pack(side=LEFT, padx=10, pady=10)
+        date_to_element.pack(side=LEFT, padx=10, pady=10)
+        entrydict['date_from_element']=date_from_element
+        entrydict['date_to_element'] = date_to_element
+        self.entry_dict['frame_ozone']=entrydict
+
+    def get_max_ozon_orders(self,bt):
+        maxdatechange = bq_method.GetMaxRecord(
+            "orders2021", "OZON", "polar.json", "", "created_at"
+        )
+        logger.debug(maxdatechange)
+    def get_max_ozon_trn(self,bt):
+        maxdatechange = bq_method.GetMaxRecord(
+            "tranv32022", "OZON", "polar.json", "", "operation_date"
+        )
+        logger.debug(maxdatechange)
+    def get_max_wb_sale(self,bt):
+        field='lastChangeDate'
+        maxdatechange = bq_method.GetMaxRecord(
+            "sales", "wb", "polar.json", "", field
+        )
+        logger.debug(f"{field} :{maxdatechange}")
+    def get_max_wb_orders(self,bt):
+        field='lastChangeDate'
+        maxdatechange = bq_method.GetMaxRecord(
+            "orders", "wb", "polar.json", "", field
+        )
+        logger.debug(f"{field} :{maxdatechange}")
 
     def add_frame_wb(self):
         frame = ttk.Frame(self.notebook)
@@ -98,8 +200,15 @@ class App(tk.Tk):
         b2 = ttk.Button(frame_top1left, text="WB orders period")
         b2.bind("<Button-1>", self.wb_sale_update)
         b2.pack(side=TOP, padx=1, pady=1)
+        b2 = ttk.Button(frame_top1left, text="Get max from wb orders")
+        b2.bind("<Button-1>", self.get_max_wb_orders)
+        b2.pack(side=TOP, padx=1, pady=1)
+        b2 = ttk.Button(frame_top1left, text="Get max from wb sale")
+        b2.bind("<Button-1>", self.get_max_wb_sale)
+        b2.pack(side=TOP, padx=1, pady=1)
+
         ttk.Label(frame_top, text="Date from").pack(side=LEFT, padx=10, pady=10)
-        self.date_from_element = DateEntry(
+        date_from_element = DateEntry(
             frame_top,
             locale="ru_RU",
             date_pattern="dd-mm-y",
@@ -108,9 +217,9 @@ class App(tk.Tk):
             foreground="white",
             borderwidth=2,
         )
-        self.date_from_element.pack(side=LEFT, padx=10, pady=10)
+        date_from_element.pack(side=LEFT, padx=10, pady=10)
         ttk.Label(frame_top, text="to").pack(side=LEFT, padx=10, pady=10)
-        self.date_to_element = DateEntry(
+        date_to_element = DateEntry(
             frame_top,
             locale="ru_RU",
             date_pattern="dd-mm-y",
@@ -119,7 +228,21 @@ class App(tk.Tk):
             foreground="white",
             borderwidth=2,
         )
-        self.date_to_element.pack(side=LEFT, padx=10, pady=10)
+        date_to_element.pack(side=LEFT, padx=10, pady=10)
+        entrydict={}
+        entrydict['date_from_element']=date_from_element
+        entrydict['date_to_element'] = date_to_element
+        self.entry_dict['frame_wb']=entrydict
+
+
+    def get_date_frame(self,nameframe):
+        frame_entry_dict=self.entry_dict[nameframe]
+        date_from_element=frame_entry_dict['date_from_element']
+        date_to_element=frame_entry_dict['date_to_element']
+        datefrom = date_from_element.get_date()
+        dateto = date_to_element.get_date()
+        return datefrom,dateto
+
 
     def wb_orders_update(self, bt):
         method='orders'
@@ -132,9 +255,7 @@ class App(tk.Tk):
         method='orders'
         bqtable='orders'
         option='byPeriod'
-        datefrom = self.date_from_element.get_date()
-        dateto = self.date_to_element.get_date()
-
+        datefrom,dateto = self.get_date_frame('frame_wb')
         wb_export(method,            bqtable,            option,datefromstr=datefrom.isoformat(),datetostr=dateto.isoformat()       )
         pass
 
@@ -150,9 +271,7 @@ class App(tk.Tk):
         method='sales'
         bqtable='sales'
         option='byPeriod'
-        datefrom = self.date_from_element.get_date()
-        dateto = self.date_to_element.get_date()
-
+        datefrom,dateto = self.get_date_frame('frame_wb')
         wb_export(method,            bqtable,            option ,datefromstr=datefrom.isoformat(),datetostr=dateto.isoformat()       )
 
         pass
@@ -203,9 +322,8 @@ class App(tk.Tk):
     ):
         bqdataset = "OZON"
         bqjsonservicefile = "polar.json"
-        configyml = "config_ozone.yml"
-        datefrom = self.date_from_element.get_date()
-        dateto = self.date_to_element.get_date()
+        configyml = "config_ozon.yml"
+        datefrom,dateto = self.get_date_frame('frame_ozone')
         daterange = {"datefrom": datefrom, "dateto": dateto}
 
         transfer_method.transfer_orders_transaction_ozon2bq_in_the_period(
@@ -224,9 +342,8 @@ class App(tk.Tk):
         bqtable = "orders2021"
         bqdataset = "OZON"
         bqjsonservicefile = "polar.json"
-        configyml = "config_ozone.yml"
-        datefrom = self.date_from_element.get_date()
-        dateto = self.date_to_element.get_date()
+        configyml = "config_ozon.yml"
+        datefrom,dateto = self.get_date_frame('frame_ozone')
         daterange = {"datefrom": datefrom, "dateto": dateto}
         textresult = transfer_method.export_orders_from_ozon2bq_updated_in_the_period(
             daterange, bqdataset, bqjsonservicefile, bqtable, configyml, method

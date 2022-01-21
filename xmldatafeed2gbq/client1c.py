@@ -1,16 +1,16 @@
 import datetime
+import json
 from datetime import timedelta
 
 import bq_method
 import win32com.client
-from loguru import logger
 from common_type import Struct
+from loguru import logger
+
 
 def daterange(start_date, end_date):
     for n in range(int((end_date - start_date).days) + 1):
         yield start_date + timedelta(n)
-
-
 
 
 def upload_from_1c(
@@ -102,6 +102,8 @@ def upload_from_1c(
         csvfields.append({"free_qty": "FLOAT"})
         csvfields.append({"datestock": "DATE"})
         csvfields.append({"dateexport": "DATE"})
+        with open("personal.json", "w") as json_file:
+            json.dump(liststock, json_file)
 
         bq_method.export_js_to_bq(
             liststock, bqtable, bqjsonservicefile, bqdataset, logger, csvfields

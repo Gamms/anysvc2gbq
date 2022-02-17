@@ -1,8 +1,8 @@
 dataset:
- wb:     
-  sales: 
+ wb:
+  sales:
    dateExport: TIMESTAMP
-   gNumber: FLOAT
+   gNumber: STRING
    brand: STRING
    subject: STRING
    forPay: FLOAT
@@ -32,6 +32,7 @@ dataset:
    orderId: INTEGER
    finishedPrice: FLOAT
    lastChangeDate: TIMESTAMP
+   sticker: STRING
   stocks_v2:
    brand: STRING
    name: STRING
@@ -44,3 +45,28 @@ dataset:
    date_stocks: DATE
    wb_id: STRING
    dateExport: TIMESTAMP
+   subject: STRING
+  orders:
+    wb_id: STRING
+    isCancel: BOOLEAN
+    sticker: STRING
+    brand: STRING
+    cancel_dt: TIMESTAMP
+    odid: INTEGER
+    incomeID: INTEGER
+    totalPrice: FLOAT
+    nmId: INTEGER
+    date: TIMESTAMP
+    warehouseName: STRING
+    quantity: INTEGER
+    barcode: INTEGER
+    techSize: INTEGER
+    gNumber: STRING
+    category: STRING
+    supplierArticle: STRING
+    oblast: STRING
+    dateExport: TIMESTAMP
+    discountPercent: INTEGER
+    lastChangeDate: TIMESTAMP
+    subject: STRING
+    number: STRING

@@ -2,10 +2,11 @@ import datetime
 import os
 
 import pytz
+import yaml
 from google.cloud import bigquery as bq
 from google.oauth2 import service_account
 from loguru import logger
-import yaml
+
 
 def get_schema_bqtable_from_config_file(dataset_id, tableid):
     schema = []
@@ -30,6 +31,7 @@ def get_schema_field_from_dict(fields: dict) -> list:
     return schema
 
 
+@logger.catch
 def export_js_to_bq(js, tableid, key_path, dataset_id, loger, fields_list):
     table_id = tableid
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
@@ -114,9 +116,9 @@ def GetMaxRecord(table_id, dataset_id, key_path, wb_id, field):
     bigquery_client = bq.Client()
     try:
 
-        query = f'SELECT Max(`{field}`) as MaxlastChangeDate  FROM `{fulltableid}`'
-        if wb_id!='':
-            query=query+f' where wb_id = "{wb_id}"'
+        query = f"SELECT Max(`{field}`) as MaxlastChangeDate  FROM `{fulltableid}`"
+        if wb_id != "":
+            query = query + f' where wb_id = "{wb_id}"'
         job_query = bigquery_client.query(query, project=credentials.project_id)
         results = job_query.result()
         maxdate = datetime.date(1, 1, 1)
@@ -127,7 +129,7 @@ def GetMaxRecord(table_id, dataset_id, key_path, wb_id, field):
         maxdate = datetime.datetime(1, 1, 1)
     if maxdate == None:
         maxdate = datetime.datetime(1, 1, 1)
-    if isinstance(maxdate,datetime.datetime):
+    if isinstance(maxdate, datetime.datetime):
         maxdate = maxdate.replace(tzinfo=pytz.UTC)
     return maxdate
 

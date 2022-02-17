@@ -206,7 +206,7 @@ def transform_res2js(filter_field_date, res, datefrom, wb_id, option, dateto):
     else:
         jsresult = jsres
     for el in jsresult:
-        if "number" in el and el["number"] == "":
+        if "number" in el:
             del el["number"]
         addSharedField(el, wb_id)
         if el.__contains__("customer_reward"):
@@ -216,7 +216,10 @@ def transform_res2js(filter_field_date, res, datefrom, wb_id, option, dateto):
         if el.__contains__("techSize"):
             el["techSize"] = parse_int(el["techSize"])
         if el.__contains__("gNumber"):
-            el["gNumber"] = parse_float(el["gNumber"])
+            el["gNumber"] = str(el["gNumber"])
+        if el.__contains__("sticker"):
+            el["sticker"] = str(el["sticker"])
+
         if el.__contains__("sale_percent"):
             el["sale_percent"] = parse_float(el["sale_percent"])
         if el.__contains__("ts_name"):
@@ -233,6 +236,7 @@ def addSharedField(el, wb_id):
     el["wb_id"] = wb_id
     el["dateExport"] = datetime.datetime.today().isoformat()
 
+
 def parse_int(s):
     try:
         res = int(eval(str(s)))
@@ -240,6 +244,7 @@ def parse_int(s):
             return res
     except:
         return 0
+
 
 def parse_float(s):
     try:

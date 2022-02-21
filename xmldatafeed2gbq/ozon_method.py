@@ -129,7 +129,13 @@ def query(
                         ]:
                             checkTypeFieldFloat(newdict, elfield)
                     if method == "fbo_orders":
-                        for elfield in ["total_discount_value", "old_price", "payout"]:
+                        for elfield in [
+                            "total_discount_value",
+                            "old_price",
+                            "payout",
+                            "commission_amount",
+                            "total_discount_percent",
+                        ]:
                             checkTypeFieldFloat(newdict, elfield)
 
                     for product in el["products"]:

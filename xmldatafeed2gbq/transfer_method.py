@@ -45,12 +45,12 @@ def export_orders_from_ozon2bq_updated_in_the_period(
             for elitems in items:
                 if orderidlist != "":
                     orderidlist = orderidlist + ","
-                order_id = elitems["order_id"]
+                order_id = elitems["posting_number"]
                 orderidlist = orderidlist + f"'{order_id}'"
 
             filterList.append(
                 {
-                    "fieldname": "order_id",
+                    "fieldname": "posting_number",
                     "operator": " IN ",
                     "value": orderidlist,
                 }

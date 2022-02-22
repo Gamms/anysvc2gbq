@@ -220,7 +220,7 @@ class App(tk.Tk):
         b2 = ttk.Button(frame_top1left, text="WB orders period")
         b2.bind("<Button-1>", self.wb_orders_period)
         b2.pack(side=TOP, padx=1, pady=1)
-        b2 = ttk.Button(frame_top1left, text="WB orders period")
+        b2 = ttk.Button(frame_top1left, text="WB reportsale period")
         b2.bind("<Button-1>", self.wb_reportsale_period)
         b2.pack(side=TOP, padx=1, pady=1)
 
@@ -369,7 +369,7 @@ class App(tk.Tk):
         method = "fbo_orders"
         bqtable = "fbo_orders2021"
         fieldname = "created_at"
-        ozon_data_filter_type = ozon_method.OzonDataFilterType.order_created_at
+        ozon_data_filter_type = ozon_method.OzonDataFilterType.since
         self.update_transaction_orders_by_period(
             bqtable, method, fieldname, ozon_data_filter_type
         )

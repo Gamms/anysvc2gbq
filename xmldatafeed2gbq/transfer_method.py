@@ -1,3 +1,5 @@
+import datetime
+
 import ozon_method
 import bq_method
 import yaml
@@ -106,3 +108,58 @@ def transfer_orders_transaction_ozon2bq_in_the_period(daterange, bqdataset, bqjs
                     logger.info(f'Данных нет {method} c {datefrom} по {dateto}')
             except Exception as e:
                 logger.exception("Ошибка выполнения." + e.__str__())
+
+def export_orders_from_ozon2bq_by_id(bqdataset, bqjsonservicefile, bqtable,configyml,order_id,ozon_id):
+    method='orders_v3'
+    urimethod=ozon_method.apimethods.get(method)
+
+    with open(configyml) as f:
+        config = yaml.safe_load(f)
+
+    filter_list=list(filter(lambda x: x['lk']['bq_id']==ozon_id,config['lks']))
+    if len(filter_list)==0:
+        raise f'Не найден {ozon_id} в файле конфигурации {configyml}!'
+
+    for lkConfig in filter_list:
+        ozonid = lkConfig['lk']['bq_id']
+        apikey = lkConfig['lk']['apikey']
+        clientid = lkConfig['lk']['clientid']
+
+        logger.info(f'Начало импорта из OZON {ozonid}:')
+        datefrom = datetime.date.today()
+        dateto = datetime.date.today()
+
+        items = ozon_method.ozon_import(method, urimethod, apikey, clientid, ozonid, datefrom, dateto,
+                                        ozon_method.OzonDataFilterType.order_id,order_id)
+        if len(items) != 0:
+            logger.info(f'Чистим  данные в {bqtable} по {len(items)} заказам')
+            fieldname = 'operation_date'
+            filterList = []
+            filterList.append(
+                {
+                    "fieldname": "ozon_id",
+                    "operator": "=",
+                    "value": ozonid,
+                }
+            )
+            orderidlist = ''
+            for elitems in items:
+                if orderidlist != '':
+                    orderidlist = orderidlist + ','
+                order_id = elitems['order_id']
+                orderidlist = orderidlist + f"'{order_id}'"
+
+            filterList.append(
+                {
+                    "fieldname": "order_id",
+                    "operator": " IN ",
+                    "value": orderidlist,
+                }
+            )
+            bq_method.DeleteRowFromTable(bqtable, bqdataset, bqjsonservicefile, filterList)
+            fields_list = ozon_method.fields_from_method(method)
+            bq_method.export_js_to_bq(items, bqtable, bqjsonservicefile, bqdataset, logger, fields_list)
+            text = f'Всё выгружено {method} c {datefrom} по {dateto}'
+        else:
+            text=f'Данных нет {method} c {datefrom} по {dateto} - {ozonid}'
+            logger.info(text)

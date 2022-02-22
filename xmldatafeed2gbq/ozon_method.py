@@ -16,6 +16,7 @@ apimethods = {
     "orders": "https://api-seller.ozon.ru/v2/posting/fbs/list",
     "fbo_orders": "https://api-seller.ozon.ru/v2/posting/fbo/list",
     "price": "https://api-seller.ozon.ru/v1/product/info/prices",
+    "orders_v3": "https://api-seller.ozon.ru/v3/posting/fbs/list"
 }
 
 data_filter_type = Struct
@@ -27,6 +28,7 @@ class OzonDataFilterType(str, Enum):
     updated_at = "updated_at"  # order
     date = "date"  # transaction
     since = "since"  # fboorders
+    order_id = "order_id"
 
 
 def ozon_import(
@@ -37,7 +39,7 @@ def ozon_import(
     ozonid,
     datefrom,
     dateto,
-    ozon_data_filter_type: OzonDataFilterType,
+    ozon_data_filter_type: OzonDataFilterType,order_id=0
 ):
     # делаем 5 попыток с паузой 1 минута, если не вышло пропускаем
 
@@ -49,7 +51,7 @@ def ozon_import(
         ozonid,
         datefrom,
         dateto,
-        ozon_data_filter_type,
+        ozon_data_filter_type,order_id
     )
 
     return items
@@ -68,12 +70,12 @@ def query(
     ozon_id,
     datefrom,
     dateto,
-    ozon_data_filter_type: OzonDataFilterType,
+    ozon_data_filter_type: OzonDataFilterType,order_id=0
 ):
     page = 1
     querycount = 1000
     data, querycount = makedata(
-        page, querycount, method, datefrom, dateto, ozon_data_filter_type
+        page, querycount, method, datefrom, dateto, ozon_data_filter_type,order_id
     )
     headers = {"Api-Key": apikey, "Client-Id": clientid}
     res = make_query("post", apiuri, data, headers)
@@ -228,7 +230,7 @@ def makedata(
     method,
     datefrom,
     dateto,
-    ozon_data_filter_type: OzonDataFilterType,
+    ozon_data_filter_type: OzonDataFilterType,order_id
 ):
     datefromstr = datefrom.strftime("%Y-%m-%dT%H:%M:%S.000Z")
     datetostr = dateto.strftime("%Y-%m-%dT23:59:59.000Z")
@@ -245,11 +247,16 @@ def makedata(
         querycount = 1000
         ofset = (page - 1) * querycount
         data = f'{{"dir": "asc","filter": {{"since": "{datefromstr}","to": "{datetostr}"}},"offset": {ofset},"limit": {querycount},"with": {{"barcodes":true,"financial_data": true,"analytics_data": true}}}}'
+    elif ozon_data_filter_type == OzonDataFilterType.order_id:
+        querycount = 1000
+        ofset = (page - 1) * querycount
+        data = f'{{"dir": "asc","filter": {{"order_id": {order_id},"offset": {ofset},"limit": {querycount},"with": {{"barcodes":true,"financial_data": true,"analytics_data": true}}}}'
 
     else:  # orders created_at
         querycount = 1000
         ofset = (page - 1) * querycount
         data = f'{{"dir": "asc","filter": {{"{ozon_data_filter_type.name}":{{"from": "{datefromstr}","to": "{datetostr}"}}}},"offset": {ofset},"limit": {querycount},"with": {{"barcodes":true,"financial_data": true,"analytics_data": true}}}}'
+
     return data, querycount
 
 

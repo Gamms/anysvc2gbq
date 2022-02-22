@@ -32,24 +32,24 @@ class Client1c():
             raise "Нет подключения к базе 1С"
         textquery=get_query_itemref()
         query=self.connection.NewObject("Query", textquery)
-        query.SetParameter("Актуальность",self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.НайтиПоНаименованию("Актуальность"))
-        query.SetParameter("НомерТкани", self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.НайтиПоНаименованию("Номер ткани"))
-        query.SetParameter("Размер",self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.НайтиПоНаименованию("Размер"))
+        query.SetParameter("Актуальность",self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Актуальность"))
+        query.SetParameter("НомерТкани", self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Номер ткани"))
+        query.SetParameter("Размер",self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Размер"))
         query.SetParameter("ТипТкани",
-                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.НайтиПоНаименованию("Тип ткани"))
+                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Тип ткани"))
         query.SetParameter("Ткань",
-                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.НайтиПоНаименованию("Ткань"))
+                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Ткань"))
         query.SetParameter("Форма",
-                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.НайтиПоНаименованию("Форма"))
+                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Форма"))
         query.SetParameter("Принт",
-                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.НайтиПоНаименованию("Принт/цвет"))
+                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Принт/цвет"))
         query.SetParameter("ГруппаТкани",
-                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.НайтиПоНаименованию("Группа ткани"))
+                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Группа ткани"))
         query.SetParameter("СтатусИзделия",
-                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.НайтиПоНаименованию("Статус изделия"))
+                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Статус изделия"))
         query.SetParameter("ТипТовара",
-                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.НайтиПоНаименованию("Тип товара"))
-        query.SetParameter("ТГ",self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.НайтиПоНаименованию("ТГ"))
+                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Тип товара"))
+        query.SetParameter("ТГ",self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("ТГ"))
 
         choose = query.execute().choose()
         liststock = []

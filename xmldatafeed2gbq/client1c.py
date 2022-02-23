@@ -77,6 +77,9 @@ class Client1c():
             dict["print_color"] = choose.print_color
             dict["textile_n"] = choose.textile_n
             dict["textile_group"] = choose.textile_group
+            dict["for_vpr"]=f'{dict["form"]} {dict["fabric_type"]}'
+
+
             liststock.append(dict)
         return liststock
 

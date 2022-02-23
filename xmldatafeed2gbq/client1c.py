@@ -292,7 +292,7 @@ def upload_from_1c(
                 )
 
 
-def export_item_to_bq(fileconfi1c, bqtable, bqjsonservicefile, bqdataset):
+def export_item_to_bq(fileconfi1c,bqjsonservicefile, bqdataset,bqtable):
     with open(fileconfi1c, encoding="utf-8") as f:
         config = yaml.safe_load(f)
     cli = Client1c(config)

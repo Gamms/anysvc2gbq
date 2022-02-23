@@ -129,7 +129,13 @@ class Client1c:
             dict["print_color"] = choose.print_color
             dict["textile_n"] = choose.textile_n
             dict["textile_group"] = choose.textile_group
-            dict["for_vpr"] = f'{dict["form"]} {dict["fabric_type"]}'
+            for_vpr=''
+            if dict["form"] is not None:
+                for_vpr=dict["form"]
+            if dict["fabric_type"] is not None:
+                for_vpr = for_vpr+" "+dict["fabric_type"]
+
+            dict["for_vpr"] = for_vpr
 
             liststock.append(dict)
         return liststock

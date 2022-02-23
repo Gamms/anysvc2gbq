@@ -55,6 +55,10 @@ class Client1c():
         liststock = []
         while choose.next():
             dict = {}
+            dict["finished_product"] = choose.finished_product
+            dict["actuality"] = choose.actuality
+            dict["article"] = choose.article
+            dict["nom_group"] = choose.article_wb
             dict["article_wb"] = choose.article_wb
             dict["name_marketplace"] = choose.name_marketplace
             dict["id_product_marketplace"] = choose.id_product_marketplace
@@ -73,9 +77,6 @@ class Client1c():
             dict["print_color"] = choose.print_color
             dict["textile_n"] = choose.textile_n
             dict["textile_group"] = choose.textile_group
-            dict["product_group_2"] = choose.product_group_2
-            dict["article"] = choose.article
-            dict["finished_product"] = choose.finished_product
             liststock.append(dict)
         return liststock
 
@@ -251,5 +252,5 @@ def export_item_to_bq():
         json.dump(liststock, json_file)
 
     bq_method.export_js_to_bq(
-        liststock, 'item_ref1c', 'polar.json', 'DB2019', logger, csvfields
+        liststock, 'item_ref1C', 'polar.json', 'DB2019', logger, csvfields
     )

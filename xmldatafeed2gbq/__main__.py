@@ -1,21 +1,20 @@
 # type: ignore[attr-defined]
 import datetime
-
-
-import typer
-import yaml
+from enum import Enum
 
 import transfer_method
-from client1c import upload_from_1c
+import typer
+import yaml
+from client1c import export_item_to_bq, upload_from_1c
+from common_type import periodOption
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
 from loguru import logger
+from ozon_method import OzonDataFilterType
 from rich.console import Console
 from verifydata import verify
 from xmldatafeed import xmldatafeed
-from common_type import periodOption
-from ozon_method import OzonDataFilterType
-from enum import Enum
+
 folderLog = "log/"
 app = typer.Typer(
     name="xmldatafeed2gbq",
@@ -33,10 +32,12 @@ class periodOption(str, Enum):
     last_quarter = "last_quarter"
     manual = "manual"
 
+
 class ozonOperation(str, Enum):
     orders = "orders"
     transaction = "transaction"
     fbo_orders = "fbo_orders"
+
 
 def version_callback(print_version: bool) -> None:
     """Print the version of the package."""
@@ -84,11 +85,18 @@ def uploadfrom1C(
     datestock_start_str: str = "",
     datestock_end_str: str = "",
 ) -> None:
-    daterange = fill_daterange_from_option(datestock_end_str, datestock_start_str, period_option)
+    daterange = fill_daterange_from_option(
+        datestock_end_str, datestock_start_str, period_option
+    )
     with open("client1C_config.yml", encoding="utf-8") as f:
         config = yaml.safe_load(f)
     upload_from_1c(
-        config, bqjsonservicefile, bqdataset, bqtable, daterange['datefrom'], daterange['dateto']
+        config,
+        bqjsonservicefile,
+        bqdataset,
+        bqtable,
+        daterange["datefrom"],
+        daterange["dateto"],
     )
 
 
@@ -111,7 +119,7 @@ def fill_daterange_from_option(datestock_end_str, datestock_start_str, period_op
     elif period_option == periodOption.manual:
         datestock_end = parser.parse(datestock_end_str)
         datestock_start = parser.parse(datestock_start_str)
-    daterange = {'datefrom': datestock_start, 'dateto': datestock_end}
+    daterange = {"datefrom": datestock_start, "dateto": datestock_end}
     return daterange
 
 
@@ -133,35 +141,80 @@ def gui(
 ) -> None:
     verify(bqjsonservicefile, bqdataset, bqtable)
 
+
 @logger.catch
 @app.command()
-def upload_from_ozon2bq(operation:ozonOperation,bqtable: str,date_filter_field:OzonDataFilterType=OzonDataFilterType.updated_at,period_option: periodOption = periodOption.last_2day,
+def upload_from_ozon2bq(
+    operation: ozonOperation,
+    bqtable: str,
+    date_filter_field: OzonDataFilterType = OzonDataFilterType.updated_at,
+    period_option: periodOption = periodOption.last_2day,
     datestock_start_str: str = "",
     datestock_end_str: str = "",
-    bqjsonservicefile: str='polar.json', bqdataset: str = "OZON", configyml:str='config_ozon.yml'
+    bqjsonservicefile: str = "polar.json",
+    bqdataset: str = "OZON",
+    configyml: str = "config_ozon.yml",
 ) -> None:
-    daterange = fill_daterange_from_option(datestock_end_str, datestock_start_str, period_option)
-    if operation==ozonOperation.transaction:
-        method='transactionv3'
+    daterange = fill_daterange_from_option(
+        datestock_end_str, datestock_start_str, period_option
+    )
+    if operation == ozonOperation.transaction:
+        method = "transactionv3"
         date_filter_field = OzonDataFilterType.date
-        fieldname = 'operation_date'
-        transfer_method.transfer_orders_transaction_ozon2bq_in_the_period(daterange,bqdataset, bqjsonservicefile, bqtable, configyml,
-                                                                fieldname, method, date_filter_field)
-    elif operation==ozonOperation.fbo_orders:
-        method='fbo_orders'
-        fieldname = 'created_at'
+        fieldname = "operation_date"
+        transfer_method.transfer_orders_transaction_ozon2bq_in_the_period(
+            daterange,
+            bqdataset,
+            bqjsonservicefile,
+            bqtable,
+            configyml,
+            fieldname,
+            method,
+            date_filter_field,
+        )
+    elif operation == ozonOperation.fbo_orders:
+        method = "fbo_orders"
+        fieldname = "created_at"
         date_filter_field = OzonDataFilterType.since
-        transfer_method.transfer_orders_transaction_ozon2bq_in_the_period(daterange,bqdataset, bqjsonservicefile, bqtable, configyml,
-                                                                fieldname, method, date_filter_field)
+        transfer_method.transfer_orders_transaction_ozon2bq_in_the_period(
+            daterange,
+            bqdataset,
+            bqjsonservicefile,
+            bqtable,
+            configyml,
+            fieldname,
+            method,
+            date_filter_field,
+        )
     else:
-        fieldname = 'created_at'
-        method = 'orders'
+        fieldname = "created_at"
+        method = "orders"
         if date_filter_field == OzonDataFilterType.updated_at:
-            transfer_method.export_orders_from_ozon2bq_updated_in_the_period(daterange,bqdataset,bqjsonservicefile,bqtable,configyml,method)
+            transfer_method.export_orders_from_ozon2bq_updated_in_the_period(
+                daterange, bqdataset, bqjsonservicefile, bqtable, configyml, method
+            )
         else:
-            transfer_method.transfer_orders_transaction_ozon2bq_in_the_period(daterange,bqdataset, bqjsonservicefile, bqtable, configyml,
-                                                                fieldname, method, date_filter_field)
+            transfer_method.transfer_orders_transaction_ozon2bq_in_the_period(
+                daterange,
+                bqdataset,
+                bqjsonservicefile,
+                bqtable,
+                configyml,
+                fieldname,
+                method,
+                date_filter_field,
+            )
 
+
+@logger.catch
+@app.command()
+def uploadfrom1C_item(
+    bqjsonservicefile: str = "polar.json",
+    bqdataset: str = "DB2019",
+    bqtable: str = "item_ref1C",
+    fileconfig1c: str = "client1C_config.yml",
+) -> None:
+    export_item_to_bq(fileconfig1c, bqjsonservicefile, bqdataset, bqtable)
 
 
 if __name__ == "__main__":

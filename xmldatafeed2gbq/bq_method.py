@@ -251,3 +251,18 @@ def get_schema_field_from_dict(fields: dict) -> list:
     for name, type in fields.items():
         schema.append(bq.SchemaField(name, type))
     return schema
+
+
+def TruncateTable(table_id, dataset_id, key_path):
+    os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
+    credentials = get_credential(key_path)
+    fulltableid = get_full_tableid(credentials, dataset_id, table_id)
+    bigquery_client = bq.Client()
+    results = 0
+    try:
+        query = f"TRUNCATE TABLE `{fulltableid}`"
+        job_query = bigquery_client.query(query, project=credentials.project_id)
+        results = job_query.result()
+    except Exception as e:
+        print(e)
+    return results

@@ -1,55 +1,107 @@
 import datetime
 import json
 from datetime import timedelta
-import yaml
+
 import bq_method
 import win32com.client
+import yaml
 from common_type import Struct
 from loguru import logger
 from query1C import *
+
 
 def daterange(start_date, end_date):
     for n in range(int((end_date - start_date).days) + 1):
         yield start_date + timedelta(n)
 
-class Client1c():
-    def __init__(self,config):
+
+class Client1c:
+    def __init__(self, config):
         struct_config = Struct(**config)
-        self.server=struct_config.server
-        self.infobase=struct_config.infobase
-        self.user=struct_config.user
-        self.password=struct_config.password
-        self.connection=None
+        self.server = struct_config.server
+        self.infobase = struct_config.infobase
+        self.user = struct_config.user
+        self.password = struct_config.password
+        self.connection = None
+
     def connect(self):
         CONSTR = f'Srvr="{self.server}";Ref="{self.infobase}";Usr="{self.user}";Pwd="{self.password}"'
         self.connection = win32com.client.Dispatch("V83.COMConnector").Connect(CONSTR)
 
     def disconnect(self):
-        self.connection=None
+        self.connection = None
 
-    def get_item_ref(self)-> list:
-        if self.connection==None:
+    def get_item_ref(self) -> list:
+        if self.connection == None:
             raise "Нет подключения к базе 1С"
-        textquery=get_query_itemref()
-        query=self.connection.NewObject("Query", textquery)
-        query.SetParameter("Актуальность",self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Актуальность"))
-        query.SetParameter("НомерТкани", self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Номер ткани"))
-        query.SetParameter("Размер",self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Размер"))
-        query.SetParameter("ТипТкани",
-                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Тип ткани"))
-        query.SetParameter("Ткань",
-                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Ткань"))
-        query.SetParameter("Форма",
-                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Форма"))
-        query.SetParameter("Принт",
-                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Принт/цвет"))
-        query.SetParameter("ГруппаТкани",
-                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Группа ткани"))
-        query.SetParameter("СтатусИзделия",
-                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Статус изделия"))
-        query.SetParameter("ТипТовара",
-                           self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("Тип товара"))
-        query.SetParameter("ТГ",self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription("ТГ"))
+        textquery = get_query_itemref()
+        query = self.connection.NewObject("Query", textquery)
+        query.SetParameter(
+            "Актуальность",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "Актуальность"
+            ),
+        )
+        query.SetParameter(
+            "НомерТкани",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "Номер ткани"
+            ),
+        )
+        query.SetParameter(
+            "Размер",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "Размер"
+            ),
+        )
+        query.SetParameter(
+            "ТипТкани",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "Тип ткани"
+            ),
+        )
+        query.SetParameter(
+            "Ткань",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "Ткань"
+            ),
+        )
+        query.SetParameter(
+            "Форма",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "Форма"
+            ),
+        )
+        query.SetParameter(
+            "Принт",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "Принт/цвет"
+            ),
+        )
+        query.SetParameter(
+            "ГруппаТкани",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "Группа ткани"
+            ),
+        )
+        query.SetParameter(
+            "СтатусИзделия",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "Статус изделия"
+            ),
+        )
+        query.SetParameter(
+            "ТипТовара",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "Тип товара"
+            ),
+        )
+        query.SetParameter(
+            "ТГ",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "ТГ"
+            ),
+        )
 
         choose = query.execute().choose()
         liststock = []
@@ -77,14 +129,10 @@ class Client1c():
             dict["print_color"] = choose.print_color
             dict["textile_n"] = choose.textile_n
             dict["textile_group"] = choose.textile_group
-            dict["for_vpr"]=f'{dict["form"]} {dict["fabric_type"]}'
-
+            dict["for_vpr"] = f'{dict["form"]} {dict["fabric_type"]}'
 
             liststock.append(dict)
         return liststock
-
-
-
 
 
 def upload_from_1c(
@@ -139,7 +187,12 @@ def upload_from_1c(
         )
 
         def upload_from_1c(
-            config, bqjsonservicefile, bqdataset, bqtable, datestock_start, datestock_end
+            config,
+            bqjsonservicefile,
+            bqdataset,
+            bqtable,
+            datestock_start,
+            datestock_end,
         ):
             global query, choose
             struct_config = Struct(**config)
@@ -163,10 +216,14 @@ def upload_from_1c(
                     "value": datestock_end.strftime("%Y-%m-%d"),
                 }
             )
-            bq_method.DeleteRowFromTable(bqtable, bqdataset, bqjsonservicefile, filterList)
+            bq_method.DeleteRowFromTable(
+                bqtable, bqdataset, bqjsonservicefile, filterList
+            )
 
             for datestock in daterange(datestock_start, datestock_end):
-                logger.info(f"Получение остатков из 1С {datestock.strftime('%d-%m-%Y')}.")
+                logger.info(
+                    f"Получение остатков из 1С {datestock.strftime('%d-%m-%Y')}."
+                )
                 query.SetParameter(
                     "ДатаОстатковНачало",
                     v83.newObject(
@@ -235,16 +292,16 @@ def upload_from_1c(
                 )
 
 
-def export_item_to_bq():
-    with open("client1C_config.yml", encoding="utf-8") as f:
+def export_item_to_bq(fileconfi1c, bqtable, bqjsonservicefile, bqdataset):
+    with open(fileconfi1c, encoding="utf-8") as f:
         config = yaml.safe_load(f)
-    cli=Client1c(config)
+    cli = Client1c(config)
     cli.connect()
-    liststock=cli.get_item_ref()
-    if liststock==None:
+    liststock = cli.get_item_ref()
+    if liststock == None:
         logger.critical("Нет подключения к базе 1С!")
         return
-    if len(liststock)==0:
+    if len(liststock) == 0:
         logger.critical("Нет данных в справочнике номенклатуры")
         return
 
@@ -254,6 +311,8 @@ def export_item_to_bq():
     with open("personal.json", "w") as json_file:
         json.dump(liststock, json_file)
 
+    bq_method.TruncateTable(bqtable, bqdataset, bqjsonservicefile)
+
     bq_method.export_js_to_bq(
-        liststock, 'item_ref1C', 'polar.json', 'DB2019', logger, csvfields
+        liststock, bqtable, bqjsonservicefile, bqdataset, logger, csvfields
     )

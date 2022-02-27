@@ -233,14 +233,12 @@ def upload_from_ozon2bq(
     datestock_start_str: str = "",
     datestock_end_str: str = "",
     bqjsonservicefile: str = "polar.json",
-    bqdataset: str = "OZON",
-    configyml: str = "config_ozon.yml",
+    bqdataset: str = "wb",
 ) -> None:
-    daterange = fill_daterange_from_option(
-        datestock_end_str, datestock_start_str, period_option
-    )
     if period_option==periodOption.changes:
         option = "changes"
+        datefromiso=''
+        datefromiso = ''
     else:
         daterange = fill_daterange_from_option(
             datestock_end_str, datestock_start_str, period_option
@@ -254,7 +252,7 @@ def upload_from_ozon2bq(
     elif operation==wbOperation.sales:
         method = "sales"
 
-    wb_export(method, bqtable, option,datefromiso,datetoiso)
+    wb_export(method, bqtable, option,datefromiso,datetoiso,jsonkey=bqjsonservicefile,bqdataset=bqdataset)
 
 
 if __name__ == "__main__":

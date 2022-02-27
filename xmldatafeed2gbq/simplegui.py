@@ -17,7 +17,7 @@ from dateutil.relativedelta import relativedelta
 from loguru import logger
 from tkcalendar import DateEntry
 
-from transfer_method import wb_export
+
 
 
 class QueueHandler(logging.Handler):
@@ -279,7 +279,7 @@ class App(tk.Tk):
         method = "orders"
         bqtable = "orders"
         option = "changes"
-        wb_export(method, bqtable, option)
+        transfer_method.wb_export(method, bqtable, option)
         pass
 
     def wb_orders_period(self, bt):
@@ -287,7 +287,7 @@ class App(tk.Tk):
         bqtable = "orders"
         option = "byPeriod"
         datefrom, dateto = self.get_date_frame("frame_wb")
-        wb_export(
+        transfer_method.wb_export(
             method,
             bqtable,
             option,
@@ -301,7 +301,7 @@ class App(tk.Tk):
         bqtable = "reportsale"
         option = "byPeriod"
         datefrom, dateto = self.get_date_frame("frame_wb")
-        wb_export(
+        transfer_method.wb_export(
             method,
             bqtable,
             option,
@@ -314,7 +314,7 @@ class App(tk.Tk):
         method = "sales"
         bqtable = "sales"
         option = "changes"
-        wb_export(method, bqtable, option)
+        transfer_method.wb_export(method, bqtable, option)
 
         pass
 
@@ -323,7 +323,7 @@ class App(tk.Tk):
         bqtable = "sales"
         option = "byPeriod"
         datefrom, dateto = self.get_date_frame("frame_wb")
-        wb_export(
+        transfer_method.wb_export(
             method,
             bqtable,
             option,
@@ -337,16 +337,16 @@ class App(tk.Tk):
         method = "stocks_v1"
         bqtable = "stocks_v1"
         datefrom, dateto = self.get_date_frame("frame_wb")
-        wb_export(method, bqtable, datefrom=datefrom, dateto=dateto)
+        transfer_method.wb_export(method, bqtable, datefrom=datefrom, dateto=dateto)
 
     def wb_stock(self, bt):
         method = "stocks_v1"
         bqtable = "stocks_v1"
-        wb_export(method, bqtable, datefrom=datestock, dateto=datestock)
+        transfer_method.wb_export(method, bqtable, datefrom=datestock, dateto=datestock)
 
         method = "stocks_v2"
         bqtable = "stocks_v2"
-        wb_export(method, bqtable)
+        transfer_method.wb_export(method, bqtable)
 
     def select_tab(self, event):
         tab_id = self.notebook.select()

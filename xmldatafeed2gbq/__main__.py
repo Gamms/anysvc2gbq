@@ -14,7 +14,7 @@ from ozon_method import OzonDataFilterType
 from rich.console import Console
 from verifydata import verify
 from xmldatafeed import xmldatafeed
-from transfer_method import wb_export
+
 
 folderLog = "log/"
 app = typer.Typer(
@@ -252,7 +252,7 @@ def upload_from_ozon2bq(
     elif operation==wbOperation.sales:
         method = "sales"
 
-    wb_export(method, bqtable, option,datefromiso,datetoiso,jsonkey=bqjsonservicefile,bqdataset=bqdataset)
+    transfer_method.wb_export(method, bqtable, option,datefromiso,datetoiso,jsonkey=bqjsonservicefile,bqdataset=bqdataset)
 
 
 if __name__ == "__main__":

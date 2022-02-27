@@ -226,7 +226,7 @@ def uploadfrom1C_item(
 
 @logger.catch
 @app.command()
-def upload_from_ozon2bq(
+def upload_from_wb2bq(
     operation: wbOperation,
     bqtable: str,
     period_option: periodOption = periodOption.changes,

@@ -14,6 +14,7 @@ from ozon_method import OzonDataFilterType
 from rich.console import Console
 from verifydata import verify
 from xmldatafeed import xmldatafeed
+from transfer_method import wb_export
 
 folderLog = "log/"
 app = typer.Typer(
@@ -31,12 +32,19 @@ class periodOption(str, Enum):
     last_month = "last_month"
     last_quarter = "last_quarter"
     manual = "manual"
+    changes = "changes"
 
 
 class ozonOperation(str, Enum):
     orders = "orders"
     transaction = "transaction"
     fbo_orders = "fbo_orders"
+
+class wbOperation(str, Enum):
+    sales = "sales"
+    orders = "orders"
+    report = "report"
+    stock = "stock"
 
 
 def version_callback(print_version: bool) -> None:
@@ -215,6 +223,38 @@ def uploadfrom1C_item(
     fileconfig1c: str = "client1C_config.yml",
 ) -> None:
     export_item_to_bq(fileconfig1c, bqjsonservicefile, bqdataset, bqtable)
+
+@logger.catch
+@app.command()
+def upload_from_ozon2bq(
+    operation: wbOperation,
+    bqtable: str,
+    period_option: periodOption = periodOption.changes,
+    datestock_start_str: str = "",
+    datestock_end_str: str = "",
+    bqjsonservicefile: str = "polar.json",
+    bqdataset: str = "OZON",
+    configyml: str = "config_ozon.yml",
+) -> None:
+    daterange = fill_daterange_from_option(
+        datestock_end_str, datestock_start_str, period_option
+    )
+    if period_option==periodOption.changes:
+        option = "changes"
+    else:
+        daterange = fill_daterange_from_option(
+            datestock_end_str, datestock_start_str, period_option
+        )
+        option='byPeriod'
+        datefromiso = daterange["datefrom"].isoformat()
+        datetoiso = daterange["dateto"].isoformat()
+
+    if operation==wbOperation.orders:
+        method = "orders"
+    elif operation==wbOperation.sales:
+        method = "sales"
+
+    wb_export(method, bqtable, option,datefromiso,datetoiso)
 
 
 if __name__ == "__main__":

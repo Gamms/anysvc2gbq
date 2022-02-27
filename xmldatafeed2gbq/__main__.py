@@ -237,7 +237,7 @@ def upload_from_wb2bq(
 ) -> None:
     if period_option==periodOption.changes:
         option = "changes"
-        datefromiso=''
+        datetoiso =''
         datefromiso = ''
     else:
         daterange = fill_daterange_from_option(

@@ -110,7 +110,7 @@ class Client1c:
             dict["finished_product"] = choose.finished_product
             dict["actuality"] = choose.actuality
             dict["article"] = choose.article
-            dict["nom_group"] = choose.article_wb
+            dict["nom_group"] = choose.nom_group
             dict["article_wb"] = choose.article_wb
             dict["name_marketplace"] = choose.name_marketplace
             dict["id_product_marketplace"] = choose.id_product_marketplace
@@ -129,11 +129,11 @@ class Client1c:
             dict["print_color"] = choose.print_color
             dict["textile_n"] = choose.textile_n
             dict["textile_group"] = choose.textile_group
-            for_vpr=''
+            for_vpr = ""
             if dict["form"] is not None:
-                for_vpr=dict["form"]
+                for_vpr = dict["form"]
             if dict["fabric_type"] is not None:
-                for_vpr = for_vpr+" "+dict["fabric_type"]
+                for_vpr = for_vpr + " " + dict["fabric_type"]
 
             dict["for_vpr"] = for_vpr
 
@@ -298,7 +298,7 @@ def upload_from_1c(
                 )
 
 
-def export_item_to_bq(fileconfi1c,bqjsonservicefile, bqdataset,bqtable):
+def export_item_to_bq(fileconfi1c, bqjsonservicefile, bqdataset, bqtable):
     with open(fileconfi1c, encoding="utf-8") as f:
         config = yaml.safe_load(f)
     cli = Client1c(config)

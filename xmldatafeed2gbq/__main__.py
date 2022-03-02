@@ -15,7 +15,6 @@ from rich.console import Console
 from verifydata import verify
 from xmldatafeed import xmldatafeed
 
-
 folderLog = "log/"
 app = typer.Typer(
     name="xmldatafeed2gbq",
@@ -39,6 +38,7 @@ class ozonOperation(str, Enum):
     orders = "orders"
     transaction = "transaction"
     fbo_orders = "fbo_orders"
+
 
 class wbOperation(str, Enum):
     sales = "sales"
@@ -224,6 +224,7 @@ def uploadfrom1C_item(
 ) -> None:
     export_item_to_bq(fileconfig1c, bqjsonservicefile, bqdataset, bqtable)
 
+
 @logger.catch
 @app.command()
 def upload_from_wb2bq(
@@ -235,24 +236,32 @@ def upload_from_wb2bq(
     bqjsonservicefile: str = "polar.json",
     bqdataset: str = "wb",
 ) -> None:
-    if period_option==periodOption.changes:
+    if period_option == periodOption.changes:
         option = "changes"
-        datetoiso =''
-        datefromiso = ''
+        datetoiso = ""
+        datefromiso = ""
     else:
         daterange = fill_daterange_from_option(
             datestock_end_str, datestock_start_str, period_option
         )
-        option='byPeriod'
+        option = "byPeriod"
         datefromiso = daterange["datefrom"].isoformat()
         datetoiso = daterange["dateto"].isoformat()
 
-    if operation==wbOperation.orders:
+    if operation == wbOperation.orders:
         method = "orders"
-    elif operation==wbOperation.sales:
+    elif operation == wbOperation.sales:
         method = "sales"
 
-    transfer_method.wb_export(method, bqtable, option,datefromiso,datetoiso,jsonkey=bqjsonservicefile,bqdataset=bqdataset)
+    transfer_method.wb_export(
+        method,
+        bqtable,
+        option,
+        datefromstr=datefromiso,
+        datetostr=datetoiso,
+        jsonkey=bqjsonservicefile,
+        datasetid=bqdataset,
+    )
 
 
 if __name__ == "__main__":

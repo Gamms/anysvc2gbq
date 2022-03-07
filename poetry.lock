@@ -213,7 +213,7 @@ gitdb = ">=4.0.1,<5"
 
 [[package]]
 name = "google-api-core"
-version = "2.3.2"
+version = "2.6.1"
 description = "Google API client core library"
 category = "main"
 optional = false
@@ -1006,8 +1006,8 @@ gitpython = [
     {file = "GitPython-3.1.24.tar.gz", hash = "sha256:df83fdf5e684fef7c6ee2c02fc68a5ceb7e7e759d08b694088d0cacb4eba59e5"},
 ]
 google-api-core = [
-    {file = "google-api-core-2.3.2.tar.gz", hash = "sha256:c8889f45cf58deca522888ae1d39b2a25e93e7d1b019ae8cee6456d5c726a40c"},
-    {file = "google_api_core-2.3.2-py2.py3-none-any.whl", hash = "sha256:3c562d393aed7e3d2011fcd1f103b490c411dcf5644b6312ca11a166a6ea8faf"},
+    {file = "google-api-core-2.6.1.tar.gz", hash = "sha256:80cf307660624f84c754d68c3c6cd31780368019741d87e0c5df5ed84730ed26"},
+    {file = "google_api_core-2.6.1-py3-none-any.whl", hash = "sha256:eadba785e358e61be576f2a93f361bb15f144162814c7b3303e78c12288aa33f"},
 ]
 google-auth = [
     {file = "google-auth-2.3.3.tar.gz", hash = "sha256:d83570a664c10b97a1dc6f8df87e5fdfff012f48f62be131e449c20dfc32630e"},

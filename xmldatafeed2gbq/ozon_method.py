@@ -17,6 +17,7 @@ apimethods = {
     "fbo_orders": "https://api-seller.ozon.ru/v2/posting/fbo/list",
     "price": "https://api-seller.ozon.ru/v1/product/info/prices",
     "orders_v3": "https://api-seller.ozon.ru/v3/posting/fbs/list",
+    "stocks_v3": "https://api-seller.ozon.ru/v3/product/info/stocks",
 }
 
 data_filter_type = Struct
@@ -226,7 +227,7 @@ def strdate_to_isodate(strdate):
 def datablock_from_js(js, method):
     if method == "stock" or method == "price":
         items = js["result"]["items"]
-    if method == "transactionv3":
+    elif method == "transactionv3":
         items = js["result"]["operations"]
     else:
         items = js["result"]
@@ -241,11 +242,15 @@ def makedata(
     dateto,
     ozon_data_filter_type: OzonDataFilterType,
     order_id=0,
+    last_id=0,
 ):
     datefromstr = datefrom.strftime("%Y-%m-%dT%H:%M:%S.000Z")
     datetostr = dateto.strftime("%Y-%m-%dT23:59:59.000Z")
     if method == "stock" or method == "price":
         data = f'{{"page": {page},"page_size": {querycount}}}'
+    elif method == "stocks_v3":
+
+        data = f'{{"filter": {{}},"limit":{querycount},"last_id": {last_id}}}'
     elif ozon_data_filter_type == OzonDataFilterType.date:
         # data =  f'{{"filter": {{"date": {{"from": "2020-01-01T00:00:00.999Z","to": "2020-12-31T23:59:59.999Z"}},'\
         data = (
@@ -270,14 +275,17 @@ def makedata(
     return data, querycount
 
 
-def make_query(method, uri, data, headers):
+def make_query(method, uri, data_str, headers, data_json={}):
     result = 0
     for i in range(1, 5):
 
         if method == "post":
-            res = requests.post(uri, data=data, headers=headers)
+            if data_json != {}:
+                res = requests.post(uri, json=data_json, headers=headers)
+            else:
+                res = requests.post(uri, data=data_str, headers=headers)
         else:
-            res = requests.get(uri, data=data, headers=headers)
+            res = requests.get(uri, data=data_str, headers=headers)
 
         if res.status_code == 429:
             logger.info(f"Too many requests, wait 60 sec:{uri}")
@@ -314,7 +322,17 @@ def parse_float(s):
 
 
 def fields_from_method(method):
-    if method == "transactionv3":
+    if method == "stocks_v3":
+        csvfields = []
+        csvfields.append({"product_id": "INTEGER"})
+        csvfields.append({"offer_id": "STRING"})
+        csvfields.append({"type": "STRING"})
+        csvfields.append({"present": "INTEGER"})
+        csvfields.append({"reserved": "INTEGER"})
+        csvfields.append({"ozon_id": "STRING"})
+        csvfields.append({"date": "DATE"})
+        csvfields.append({"dateExport": "TIMESTAMP"})
+    elif method == "transactionv3":
         csvfields = []
         csvfields.append({"operation_id": "STRING"})
         csvfields.append({"operation_type": "STRING"})

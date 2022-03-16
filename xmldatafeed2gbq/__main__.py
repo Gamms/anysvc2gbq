@@ -38,6 +38,7 @@ class ozonOperation(str, Enum):
     orders = "orders"
     transaction = "transaction"
     fbo_orders = "fbo_orders"
+    stocks = "stocks"
 
 
 class wbOperation(str, Enum):
@@ -180,6 +181,14 @@ def upload_from_ozon2bq(
             method,
             date_filter_field,
         )
+    elif operation == ozonOperation.stocks:
+        transfer_method.export_stocks_from_ozon2bq(
+            bqdataset,
+            bqjsonservicefile,
+            bqtable,
+            configyml,
+        )
+
     elif operation == ozonOperation.fbo_orders:
         method = "fbo_orders"
         fieldname = "created_at"

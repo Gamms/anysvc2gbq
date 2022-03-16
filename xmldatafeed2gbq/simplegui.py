@@ -18,8 +18,6 @@ from loguru import logger
 from tkcalendar import DateEntry
 
 
-
-
 class QueueHandler(logging.Handler):
     """Class to send logging records to a queue
     It can be used from different threads
@@ -83,10 +81,10 @@ class ConsoleUi:
 class App(tk.Tk):
     def __init__(self):
         super().__init__()
-        self.order_id=tk.IntVar()
+        self.order_id = tk.IntVar()
         self.order_id.set(546463554)
-        self.ozon_id=tk.StringVar()
-        self.ozon_id.set('ip_bog')
+        self.ozon_id = tk.StringVar()
+        self.ozon_id.set("ip_bog")
 
         self.title("Google big query export")
         self.notebook = ttk.Notebook(self, width=500, height=400, padding=10)
@@ -143,13 +141,14 @@ class App(tk.Tk):
         b2 = ttk.Button(frame_top1left, text="Update orders by id")
         b2.bind("<Button-1>", self.ozon_update_orders_by_id)
         b2.pack(side=TOP, padx=1, pady=1)
+        b2 = ttk.Button(frame_top1left, text="Update stocks v3")
+        b2.bind("<Button-1>", self.ozon_update_stocks_v3)
+        b2.pack(side=TOP, padx=1, pady=1)
+
         e = Entry(frame_top1left, textvariable=self.order_id)
         e.pack()
         e = Entry(frame_top1left, textvariable=self.ozon_id)
         e.pack()
-
-
-
 
         ttk.Label(frame_top, text="Date from").pack(side=LEFT, padx=10, pady=10)
         date_from_element = DateEntry(
@@ -393,14 +392,14 @@ class App(tk.Tk):
         method = "orders"
         bqtable = "orders2021"
         fieldname = "created_at"
-        order_id=self.order_id.get()
-        ozon_id=self.ozon_id.get()
+        order_id = self.order_id.get()
+        ozon_id = self.ozon_id.get()
         ozon_data_filter_type = ozon_method.OzonDataFilterType.order_id
-        transfer_method.export_orders_from_ozon2bq_by_id("OZON", "polar.json", "orders2021","config_ozon.yml",order_id,ozon_id)
-
+        transfer_method.export_orders_from_ozon2bq_by_id(
+            "OZON", "polar.json", "orders2021", "config_ozon.yml", order_id, ozon_id
+        )
 
         pass
-
 
     def update_transaction_orders_by_period(
         self, bqtable, method, fieldname, ozon_data_filter_type
@@ -432,6 +431,15 @@ class App(tk.Tk):
         daterange = {"datefrom": datefrom, "dateto": dateto}
         textresult = transfer_method.export_orders_from_ozon2bq_updated_in_the_period(
             daterange, bqdataset, bqjsonservicefile, bqtable, configyml, method
+        )
+
+    def ozon_update_stocks_v3(self, bt):
+        bqtable = "stocks_v3"
+        bqdataset = "OZON"
+        bqjsonservicefile = "polar.json"
+        configyml = "config_ozon.yml"
+        textresult = transfer_method.export_stocks_from_ozon2bq(
+            bqdataset, bqjsonservicefile, bqtable, configyml
         )
 
 

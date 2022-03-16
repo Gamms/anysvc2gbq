@@ -16,7 +16,7 @@ apimethods = {
     "orders": "https://api-seller.ozon.ru/v2/posting/fbs/list",
     "fbo_orders": "https://api-seller.ozon.ru/v2/posting/fbo/list",
     "price": "https://api-seller.ozon.ru/v1/product/info/prices",
-    "orders_v3": "https://api-seller.ozon.ru/v3/posting/fbs/list"
+    "orders_v3": "https://api-seller.ozon.ru/v3/posting/fbs/list",
 }
 
 data_filter_type = Struct
@@ -39,7 +39,8 @@ def ozon_import(
     ozonid,
     datefrom,
     dateto,
-    ozon_data_filter_type: OzonDataFilterType,order_id=0
+    ozon_data_filter_type: OzonDataFilterType,
+    order_id=0,
 ):
     # делаем 5 попыток с паузой 1 минута, если не вышло пропускаем
 
@@ -51,7 +52,8 @@ def ozon_import(
         ozonid,
         datefrom,
         dateto,
-        ozon_data_filter_type,order_id
+        ozon_data_filter_type,
+        order_id,
     )
 
     return items
@@ -70,12 +72,13 @@ def query(
     ozon_id,
     datefrom,
     dateto,
-    ozon_data_filter_type: OzonDataFilterType,order_id=0
+    ozon_data_filter_type: OzonDataFilterType,
+    order_id=0,
 ):
     page = 1
     querycount = 1000
     data, querycount = makedata(
-        page, querycount, method, datefrom, dateto, ozon_data_filter_type,order_id
+        page, querycount, method, datefrom, dateto, ozon_data_filter_type, order_id
     )
     headers = {"Api-Key": apikey, "Client-Id": clientid}
     res = make_query("post", apiuri, data, headers)
@@ -87,7 +90,7 @@ def query(
         # количество записей видимо больше запросим следующую страниц
         page = page + 1  #
         data, querycount = makedata(
-            page, querycount, method, datefrom, dateto, ozon_data_filter_type
+            page, querycount, method, datefrom, dateto, ozon_data_filter_type, order_id
         )
         res = make_query("post", apiuri, data, headers)
         js = json.loads(res.text)
@@ -236,7 +239,8 @@ def makedata(
     method,
     datefrom,
     dateto,
-    ozon_data_filter_type: OzonDataFilterType,order_id
+    ozon_data_filter_type: OzonDataFilterType,
+    order_id=0,
 ):
     datefromstr = datefrom.strftime("%Y-%m-%dT%H:%M:%S.000Z")
     datetostr = dateto.strftime("%Y-%m-%dT23:59:59.000Z")

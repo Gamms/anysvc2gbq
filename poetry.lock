@@ -471,7 +471,7 @@ python-versions = "*"
 
 [[package]]
 name = "nuitka"
-version = "0.7"
+version = "0.7.6"
 description = "Python compiler with full language support and CPython compatibility"
 category = "main"
 optional = false
@@ -1221,7 +1221,7 @@ nodeenv = [
     {file = "nodeenv-1.6.0.tar.gz", hash = "sha256:3ef13ff90291ba2a4a7a4ff9a979b63ffdd00a464dbe04acf0ea6471517a4c2b"},
 ]
 nuitka = [
-    {file = "Nuitka-0.7.tar.gz", hash = "sha256:3800001af72e1fb0ab5bd096dedbd88a0fe70ed33bd039fbd9e325866927f80b"},
+    {file = "Nuitka-0.7.6.tar.gz", hash = "sha256:b52d007517b41c68b62806fec2e81aa2a56932af4a4017c16ad8b5163704f828"},
 ]
 packaging = [
     {file = "packaging-21.3-py3-none-any.whl", hash = "sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522"},

@@ -2,6 +2,7 @@
 import datetime
 from enum import Enum
 
+import method_telegram
 import transfer_method
 import typer
 import yaml
@@ -261,6 +262,10 @@ def upload_from_wb2bq(
         method = "orders"
     elif operation == wbOperation.sales:
         method = "sales"
+    elif operation == wbOperation.report:
+        method = "reportsale"
+    else:
+        raise "Не настроена выгрузка для " + operation
 
     transfer_method.wb_export(
         method,
@@ -274,4 +279,9 @@ def upload_from_wb2bq(
 
 
 if __name__ == "__main__":
+    tg_handler = method_telegram.get_loguru_telegramm_notification_handler(
+        logger, "-1001572341087", "2028570019:AAEhd5gfY6qxZRmJZfymO82xSO4E-VuMXjU"
+    )
+    if tg_handler != None:
+        logger.add(tg_handler, level="ERROR")
     app()

@@ -1,11 +1,11 @@
 import datetime
 
 import bq_method
-import dateutil
 import ozon_method
 import wb_client
 import yaml
 from client1c import daterange
+from dateutil import parser
 from loguru import logger
 from ozon_client import OZONApiClient
 from simplegui import clean_table_if_necessary, fill_date

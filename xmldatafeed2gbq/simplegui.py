@@ -7,6 +7,7 @@ from tkinter import ttk
 from tkinter.scrolledtext import ScrolledText
 
 import bq_method
+import method_telegram
 import ozon_method
 import transfer_method
 import wb_client
@@ -553,5 +554,10 @@ def fill_date(
 
 
 if __name__ == "__main__":
+    tg_handler = method_telegram.get_loguru_telegramm_notification_handler(
+        logger, "-1001572341087", "2028570019:AAEhd5gfY6qxZRmJZfymO82xSO4E-VuMXjU"
+    )
+    if tg_handler != None:
+        logger.add(tg_handler, level="ERROR")
     app = App()
     app.mainloop()

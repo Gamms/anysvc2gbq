@@ -21,7 +21,35 @@ apimethods = {
 }
 
 data_filter_type = Struct
-
+float_fields=[
+                            "total_discount_value",
+                            "old_price",
+                            "payout",
+                            "commission_amount",
+                            "total_discount_percent",
+                            "marketplace_service_item_return_after_deliv_to_customer",
+                            "marketplace_service_item_return_part_goods_customer",
+                            "marketplace_service_item_return_not_deliv_to_customer",
+                            "marketplace_service_item_direct_flow_trans",
+                            "marketplace_service_item_dropoff_ff",
+                            "marketplace_service_item_deliv_to_customer",
+                            "marketplace_service_item_pickup",
+                            "marketplace_service_item_return_flow_trans",
+                            "marketplace_service_item_dropoff_pvz",
+                            "marketplace_service_item_dropoff_sc",
+                            "marketplace_service_item_fulfillment",
+                            "item_marketplace_service_item_return_after_deliv_to_customer",
+                            "item_marketplace_service_item_return_part_goods_customer",
+                            "item_marketplace_service_item_return_not_deliv_to_customer",
+                            "item_marketplace_service_item_direct_flow_trans",
+                            "item_marketplace_service_item_dropoff_ff",
+                            "item_marketplace_service_item_deliv_to_customer",
+                            "item_marketplace_service_item_pickup",
+                            "item_marketplace_service_item_return_flow_trans",
+                            "item_marketplace_service_item_dropoff_pvz",
+                            "item_marketplace_service_item_dropoff_sc",
+                            "item_marketplace_service_item_fulfillment"
+                        ]
 
 class OzonDataFilterType(str, Enum):
     order_created_at = "order_created_at"  # order
@@ -118,30 +146,21 @@ def query(
                     if not postingservice is None:
                         newdict = newdict | postingservice
                     if not analiticsdata is None:
-
                         newdict = newdict | analiticsdata
+
+                    item_services=element_product_financial['item_services']
+                    for key,value in item_services.items():
+                        newdict['item_'+key]=value
 
                     if el.__contains__("barcodes") and type(el["barcodes"]) is dict:
                         newdict = newdict | el["barcodes"]
                     newdict["ozon_id"] = ozon_id
                     newdict["dateExport"] = datetime.datetime.today().isoformat()
                     if method == "orders":
-                        for elfield in [
-                            "commission_amount",
-                            "payout",
-                            "total_discount_value",
-                            "old_price",
-                            "marketplace_service_item_deliv_to_customer",
-                        ]:
+                        for elfield in float_fields:
                             checkTypeFieldFloat(newdict, elfield)
                     if method == "fbo_orders":
-                        for elfield in [
-                            "total_discount_value",
-                            "old_price",
-                            "payout",
-                            "commission_amount",
-                            "total_discount_percent",
-                        ]:
+                        for elfield in float_fields :
                             checkTypeFieldFloat(newdict, elfield)
 
                     for product in el["products"]:

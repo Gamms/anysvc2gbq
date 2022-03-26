@@ -205,29 +205,20 @@ def transform_res2js(filter_field_date, res, datefrom, wb_id, option, dateto):
             pass
     else:
         jsresult = jsres
+    float_fields=("customer_reward","finishedPrice",'sale_percent','priceWithDisc','totalPrice','ppvz_reward','retail_price_withdisc_rub')
+    int_fields=("techSize","ts_name",'ppvz_inn')
+    str_fields=('gNumber','sticker')
     for el in jsresult:
         if "number" in el:
             del el["number"]
         addSharedField(el, wb_id)
-        if el.__contains__("customer_reward"):
-            el["customer_reward"] = parse_float(el["customer_reward"])
-        if el.__contains__("finishedPrice"):
-            el["finishedPrice"] = parse_float(el["finishedPrice"])
-        if el.__contains__("techSize"):
-            el["techSize"] = parse_int(el["techSize"])
-        if el.__contains__("gNumber"):
-            el["gNumber"] = str(el["gNumber"])
-        if el.__contains__("sticker"):
-            el["sticker"] = str(el["sticker"])
-
-        if el.__contains__("sale_percent"):
-            el["sale_percent"] = parse_float(el["sale_percent"])
-        if el.__contains__("ts_name"):
-            el["ts_name"] = parse_int(el["ts_name"])
-        if el.__contains__("priceWithDisc"):
-            el["priceWithDisc"] = parse_float(el["priceWithDisc"])
-        if el.__contains__("totalPrice"):
-            el["totalPrice"] = parse_float(el["totalPrice"])
+        for key in el.keys():
+            if key in float_fields:
+                el[key] = parse_float(el[key])
+            elif key in int_fields:
+                el[key] = parse_int(el[key])
+            elif key in str_fields:
+                el[key] = str(el[key])
 
     return jsresult
 

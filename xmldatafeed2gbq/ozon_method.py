@@ -147,6 +147,9 @@ def query(
                         newdict = newdict | postingservice
                     if not analiticsdata is None:
                         newdict = newdict | analiticsdata
+                    #эта секция только в v3 методе
+                    #for key,value in el['delivery_method'].items():
+                    #    newdict['delivery_'+key]=value
 
                     item_services=element_product_financial['item_services']
                     for key,value in item_services.items():
@@ -156,13 +159,9 @@ def query(
                         newdict = newdict | el["barcodes"]
                     newdict["ozon_id"] = ozon_id
                     newdict["dateExport"] = datetime.datetime.today().isoformat()
-                    if method == "orders":
+                    if method in ("orders","fbo_orders"):
                         for elfield in float_fields:
                             checkTypeFieldFloat(newdict, elfield)
-                    if method == "fbo_orders":
-                        for elfield in float_fields :
-                            checkTypeFieldFloat(newdict, elfield)
-
                     for product in el["products"]:
                         if product["sku"] == newdict["product_id"]:
                             newdict["offer_id"] = product["offer_id"]
@@ -180,6 +179,7 @@ def query(
                     newlist.append(newdict)
 
         itemstotal = newlist
+
     elif method == "transactionv3":
         itemstotal = js_2_plainjs(itemstotal, method, ozon_id)
     else:
@@ -210,25 +210,42 @@ def js_2_plainjs(js, method, ozon_id):
                 servicestr = f'{servicestr}{service["name"]}:{service["price"]}'
                 sumservices = sumservices + service["price"]
 
-            for item in el["items"]:
-                newdict = el | item | el["posting"]
-                newdict["services_list"] = servicestr
-                newdict["services_price_total"] = sumservices
-                newdict["ozon_id"] = ozon_id
-
-                newdict["operation_date"] = strdate_to_isodate(
-                    newdict["operation_date"]
-                )
-                newdict["order_date"] = strdate_to_isodate(newdict["order_date"])
-                newdict["dateExport"] = datetime.datetime.today().isoformat()
-                del newdict["posting"]
-                del newdict["items"]
-                del newdict["services"]
-
+            if len(el["items"]):
+                for item in el["items"]:
+                    newdict = add_transaction_row(el, ozon_id, servicestr, sumservices)
+                    newdict = newdict | item
+                    delete_useless_field(newdict)
+                    newlist.append(newdict)
+            else:
+                newdict = add_transaction_row(el, ozon_id, servicestr, sumservices)
+                newdict['name']=''
+                newdict['sku'] = ''
+                delete_useless_field(newdict)
                 newlist.append(newdict)
+
+
     else:
         newlist = js
     return newlist
+
+
+def delete_useless_field(newdict):
+    del newdict["items"]
+    del newdict["posting"]
+    del newdict["services"]
+
+
+def add_transaction_row(el, ozon_id, servicestr, sumservices):
+    newdict = el | el["posting"]
+    newdict["services_list"] = servicestr
+    newdict["services_price_total"] = sumservices
+    newdict["ozon_id"] = ozon_id
+    newdict["operation_date"] = strdate_to_isodate(
+        newdict["operation_date"]
+    )
+    newdict["order_date"] = strdate_to_isodate(newdict["order_date"])
+    newdict["dateExport"] = datetime.datetime.today().isoformat()
+    return newdict
 
 
 def strdate_to_isodate(strdate):
@@ -248,6 +265,8 @@ def datablock_from_js(js, method):
         items = js["result"]["items"]
     elif method == "transactionv3":
         items = js["result"]["operations"]
+    elif method == "orders_v3":
+        items = js["result"]["postins"]
     else:
         items = js["result"]
     return items

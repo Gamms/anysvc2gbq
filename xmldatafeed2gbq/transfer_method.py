@@ -37,6 +37,9 @@ def export_orders_from_ozon2bq_updated_in_the_period(
             ozon_method.OzonDataFilterType.updated_at,
         )
         if len(items) != 0:
+            if method=='orders':
+                add_fields_from_orders_v3(apikey, clientid, items, ozonid)
+
             logger.info(f"Чистим  данные в {bqtable} по {len(items)} заказам")
             fieldname = "operation_date"
             filterList = []
@@ -73,6 +76,27 @@ def export_orders_from_ozon2bq_updated_in_the_period(
             text = f"Данных нет {method} c {datefrom} по {dateto} - {ozonid}"
             logger.info(text)
 
+
+def add_fields_from_orders_v3(apikey, clientid, items, ozonid):
+    cli = OZONApiClient(clientid, apikey, ozonid)
+    min_date = min(items, key=lambda x: x['created_at'])['created_at']
+    max_date = max(items, key=lambda x: x['created_at'])['created_at']
+    logger.info(f"дополним данные заказа v3 из OZON {ozonid} c {min_date} по {max_date}:")
+    orders_v3 = cli.get_orders_v3(min_date,max_date)
+    for element_items in items:
+        filterlist = list(filter(lambda x: x['order_id'] == element_items['order_id'], orders_v3))
+        if len(filterlist):
+            element_items['is_express']=filterlist[0]['is_express']
+            element_items['delivery_method_name'] = filterlist[0]['delivery_method']['name']
+            element_items['delivery_method_warehouse'] = filterlist[0]['delivery_method']['warehouse']
+            element_items['delivery_method_tpl_provider'] = filterlist[0]['delivery_method']['tpl_provider']
+            element_items['tpl_integration_type'] = filterlist[0]['tpl_integration_type']
+        else:
+            element_items['is_express']=False
+            element_items['delivery_method_name'] = ''
+            element_items['delivery_method_warehouse'] = ''
+            element_items['delivery_method_tpl_provider'] = ''
+            element_items['tpl_integration_type'] = ''
 
 def transfer_orders_transaction_ozon2bq_in_the_period(
     daterange,
@@ -111,6 +135,9 @@ def transfer_orders_transaction_ozon2bq_in_the_period(
                 ozon_data_filter_type,
             )
             if len(items) != 0:
+                if method == 'orders':
+                    add_fields_from_orders_v3(apikey, clientid, items, ozonid)
+
                 logger.info(f"Чистим  данные в {bqtable} c {datefrom} по {dateto}")
                 pattern_dateto = "%Y-%m-%d"
                 if fieldname == "created_at":

@@ -140,6 +140,40 @@ class Client1c:
             liststock.append(dict)
         return liststock
 
+    def get_price_from_exchangeplan(self) -> list:
+        if self.connection == None:
+            raise "Нет подключения к базе 1С"
+        NodeExchange = self.connection.ПланыОбмена.ОбменУправлениеПредприятиемРозничнаяТорговля.findBycode(
+            "002"
+        )
+        self.connection.ПланыОбмена.ВыбратьИзменения(NodeExchange, 1)
+        textquery = get_query_price_changes()
+        query = self.connection.NewObject("Query", textquery)
+
+        query.SetParameter(
+            "Узел",
+            NodeExchange,
+        )
+        query.SetParameter(
+            "НомерСообщения",
+            1,
+        )
+
+        choose = query.execute().choose()
+        liststock = []
+        while choose.next():
+            dict = {}
+            dict["finished_product"] = choose.finished_product
+            dict["article"] = choose.article
+            dict["price"] = choose.price
+            dict["date_price"] = choose.date_price
+            dict["price_name"] = choose.price_name
+            dict["price_code"] = choose.price_code
+            dict["dateExport"] = datetime.date.today().isoformat()
+            dict["doc_guid"] = self.connection.xmlstring(choose.doc_ref)
+            liststock.append(dict)
+        return liststock
+
 
 def upload_from_1c(
     config, bqjsonservicefile, bqdataset, bqtable, datestock_start, datestock_end
@@ -318,6 +352,54 @@ def export_item_to_bq(fileconfi1c, bqjsonservicefile, bqdataset, bqtable):
         json.dump(liststock, json_file)
 
     bq_method.TruncateTable(bqtable, bqdataset, bqjsonservicefile)
+
+    bq_method.export_js_to_bq(
+        liststock, bqtable, bqjsonservicefile, bqdataset, logger, csvfields
+    )
+
+
+def export_price_to_bq(fileconfi1c, bqjsonservicefile, bqdataset, bqtable):
+    with open(fileconfi1c, encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+    cli = Client1c(config)
+    cli.connect()
+    liststock = cli.get_price_from_exchangeplan()
+    if liststock == None:
+        logger.critical("Нет подключения к базе 1С!")
+        return
+    if len(liststock) == 0:
+        logger.info("Нет изменений цен")
+        return
+
+    csvfields = []
+    for key in liststock[0].keys():
+        if key == "price":
+            type_field = "FLOAT"
+        elif key in ("date_price", "dateExport"):
+            type_field = "DATE"
+        else:
+            type_field = "STRING"
+        csvfields.append({key: type_field})
+    # with open("personal.json", "w") as json_file:
+    #    json.dump(liststock, json_file)
+    orderidlist = []
+    for elitems in liststock:
+        if elitems["doc_guid"] not in orderidlist:
+            orderidlist.append(elitems["doc_guid"])
+            if orderidliststr != "":
+                orderidliststr = orderidliststr + ","
+            order_id = elitems["doc_guid"]
+            orderidliststr = orderidliststr + f"'{order_id}'"
+
+    filterList = []
+    filterList.append(
+        {
+            "fieldname": "doc_guid",
+            "operator": " IN ",
+            "value": orderidliststr,
+        }
+    )
+    bq_method.DeleteRowFromTable(bqtable, bqdataset, bqjsonservicefile, filterList)
 
     bq_method.export_js_to_bq(
         liststock, bqtable, bqjsonservicefile, bqdataset, logger, csvfields

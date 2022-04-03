@@ -6,7 +6,7 @@ import method_telegram
 import transfer_method
 import typer
 import yaml
-from client1c import export_item_to_bq, upload_from_1c
+from client1c import export_item_to_bq, export_price_to_bq, upload_from_1c
 from common_type import periodOption
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
@@ -233,6 +233,17 @@ def uploadfrom1C_item(
     fileconfig1c: str = "client1C_config.yml",
 ) -> None:
     export_item_to_bq(fileconfig1c, bqjsonservicefile, bqdataset, bqtable)
+
+
+@logger.catch
+@app.command()
+def uploadfrom1C_price(
+    bqjsonservicefile: str = "polar.json",
+    bqdataset: str = "DB2019",
+    bqtable: str = "item_price1C",
+    fileconfig1c: str = "client1C_config.yml",
+) -> None:
+    export_price_to_bq(fileconfig1c, bqjsonservicefile, bqdataset, bqtable)
 
 
 @logger.catch

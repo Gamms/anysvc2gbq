@@ -134,6 +134,28 @@ def GetMaxRecord(table_id, dataset_id, key_path, wb_id, field):
         maxdate = maxdate.replace(tzinfo=pytz.UTC)
     return maxdate
 
+def GetMaxRecord_v1(table_id, dataset_id, key_path, fieldName, filterValue, filterField):
+    os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = key_path
+    credentials = service_account.Credentials.from_service_account_file(
+        key_path,
+        scopes=["https://www.googleapis.com/auth/cloud-platform"],
+    )
+    fulltableid = f'{credentials.project_id}.{dataset_id}.{table_id}'
+    bigquery_client = bq.Client()
+    try:
+        query = f'SELECT Max({fieldName}) as Max{fieldName}  FROM `{fulltableid}` where {filterField}={filterValue}'
+        job_query = bigquery_client.query(query, project=credentials.project_id)
+        results = job_query.result()
+        maxdate = datetime.date(1, 1, 1)
+        for row in results:
+            maxdate = row[f'Max{fieldName}']
+            break
+    except Exception as e:
+        maxdate = datetime.datetime(1, 1, 1)
+    if maxdate==None:
+        maxdate = datetime.datetime(1, 1, 1)
+    maxdate = maxdate.replace(tzinfo=pytz.UTC)
+    return maxdate
 
 def DeleteOldReport(datefrom, dateto, dataset_id, key_path, fieldname, table_id, wb_id):
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path

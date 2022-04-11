@@ -11,8 +11,9 @@ ws.title("GUI data olap")
 # ws.geometry('500x500')
 ws["bg"] = "gray26"
 
-
 def verify(bqjsonservicefile="polar.json", bqdataset="DB2019", bqtable="ozon_wb_1c"):
+
+
     setting["bqjsonservicefile"] = bqjsonservicefile
     setting["bqdataset"] = bqdataset
     setting["bqtable"] = bqtable
@@ -28,6 +29,7 @@ def verify(bqjsonservicefile="polar.json", bqdataset="DB2019", bqtable="ozon_wb_
 
 
 def verify_last_month(b):
+
     print("month")
     filterList = []
     date_start = datetime.date.today() - relativedelta(months=1)

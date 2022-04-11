@@ -1,0 +1,11 @@
+lks:
+  - lk:
+      oath_id: oath id
+      oath_token: oath token
+      campaign: id campaing from LK
+      description: name
+  - lk:
+      oath_id: oath id 1
+      oath_token: oath token 1
+      campaign: id campaing from LK 1
+      description: name

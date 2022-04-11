@@ -8,6 +8,8 @@ from common_type import Struct
 from dateutil import parser
 from loguru import logger
 
+import transfer_method
+
 timeout = 60  # таймаут 60 секунд
 apimethods = {
     "transaction": "https://api-seller.ozon.ru/v2/finance/transaction/list",
@@ -88,11 +90,6 @@ def ozon_import(
     return items
 
 
-def checkTypeFieldFloat(newdict, elfield):
-    if newdict.__contains__(elfield) and type(newdict[elfield]) is not float:
-        newdict[elfield] = parse_float(newdict[elfield])
-
-
 def query(
     apiuri,
     apikey,
@@ -161,7 +158,7 @@ def query(
                     newdict["dateExport"] = datetime.datetime.today().isoformat()
                     if method in ("orders","fbo_orders"):
                         for elfield in float_fields:
-                            checkTypeFieldFloat(newdict, elfield)
+                            transfer_method.checkTypeFieldFloat(newdict, elfield)
                     for product in el["products"]:
                         if product["sku"] == newdict["product_id"]:
                             newdict["offer_id"] = product["offer_id"]
@@ -186,7 +183,7 @@ def query(
         for el in itemstotal:
 
             for elfield in ["order_amount", "commission_amount"]:
-                checkTypeFieldFloat(el, elfield)
+                transfer_method.checkTypeFieldFloat(el, elfield)
             el["ozon_id"] = ozon_id
             el["dateExport"] = datetime.datetime.today().isoformat()
             if method == "price":

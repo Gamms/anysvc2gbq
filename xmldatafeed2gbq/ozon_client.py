@@ -1,6 +1,6 @@
 import datetime
 
-from ozon_method import datablock_from_js, make_query
+import ozon_method
 
 
 class OZONApiClient:
@@ -24,9 +24,9 @@ class OZONApiClient:
         itemstotal = []
         while True:
             data_json = self.get_datafilter_stock(limit, last_id)
-            result = make_query("post", uri, "", self.get_header(), data_json=data_json)
+            result = ozon_method.make_query("post", uri, "", self.get_header(), data_json=data_json)
             js = result.json()
-            items_temp = datablock_from_js(js, "stock")
+            items_temp = ozon_method.datablock_from_js(js, "stock")
             items = []
             for elem in items_temp:
                 for elem_stock in elem["stocks"]:
@@ -52,7 +52,7 @@ class OZONApiClient:
         page: int=1
         while True:
             data_json = self.get_datafilter_orders(datefromstr,datetostr,page)
-            result = make_query("post", uri, "", self.get_header(), data_json=data_json)
+            result = ozon_method.make_query("post", uri, "", self.get_header(), data_json=data_json)
             js = result.json()
             result=js['result']
             itemstotal = itemstotal + result['postings']

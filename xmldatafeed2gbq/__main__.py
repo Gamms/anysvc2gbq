@@ -35,6 +35,9 @@ class periodOption(str, Enum):
     changes = "changes"
 
 
+class yandexOperation(str, Enum):
+    orders = "orders"
+
 class ozonOperation(str, Enum):
     orders = "orders"
     transaction = "transaction"
@@ -47,6 +50,8 @@ class wbOperation(str, Enum):
     orders = "orders"
     report = "report"
     stock = "stock"
+    orders_v2 = "orders_v2"
+
 
 
 def version_callback(print_version: bool) -> None:
@@ -275,6 +280,8 @@ def upload_from_wb2bq(
         method = "sales"
     elif operation == wbOperation.report:
         method = "reportsale"
+    elif operation == wbOperation.orders_v2:
+        method = "ordersv2"
     else:
         raise "Не настроена выгрузка для " + operation
 
@@ -287,6 +294,20 @@ def upload_from_wb2bq(
         jsonkey=bqjsonservicefile,
         datasetid=bqdataset,
     )
+
+@logger.catch
+@app.command()
+def upload_from_yandex2bq(operation:yandexOperation,
+                          bqjsonservicefile: str = "polar.json",
+                          bqdataset: str = "YM",
+                          bqtable: str = "orders",
+                          fileconfigyandex: str = "config_yandex.yml",):
+    if operation==yandexOperation.orders:
+        transfer_method.export_orders_from_ym2bq(bqdataset,bqjsonservicefile,bqtable,fileconfigyandex)
+    else:
+        logger.error(f'Operation {operation} dont recognized!')
+
+    pass
 
 
 if __name__ == "__main__":

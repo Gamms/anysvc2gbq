@@ -17,7 +17,7 @@ from dateutil import parser
 from dateutil.relativedelta import relativedelta
 from loguru import logger
 from tkcalendar import DateEntry
-
+import verifydata
 
 class QueueHandler(logging.Handler):
     """Class to send logging records to a queue
@@ -94,9 +94,10 @@ class App(tk.Tk):
 
         self.add_frame_ozone()
         self.add_frame_wb()
+        self.add_frame_ym()
+        self.add_frame_verify()
         frame = ttk.Frame(self.notebook)
 
-        self.notebook.add(frame, text="Verify", underline=0, sticky=tk.NE + tk.SW)
         self.label = ttk.Label(self)
         self.notebook.pack()
         self.label.pack(anchor=tk.W)
@@ -108,6 +109,70 @@ class App(tk.Tk):
         console_frame.rowconfigure(0, weight=1)
         self.console = ConsoleUi(console_frame)
         self.console.frame.pack()
+    def add_frame_verify(self):
+        frame = ttk.Frame(self.notebook)
+        self.notebook.add(frame, text="Verify data", underline=0, sticky=tk.NE + tk.SW)
+        frame_top = ttk.Frame(frame)
+        frame_top.pack(side=TOP)
+        frame_top1 = ttk.Frame(frame)
+        frame_top1.pack(side=TOP)
+        frame_top1left = ttk.Frame(frame_top1)
+        frame_top1left.pack(side=LEFT)
+        frame_top1right = ttk.Frame(frame_top1)
+        frame_top1right.pack(side=RIGHT)
+        b1 = ttk.Button(frame_top1left, text="Verify ")
+        b1.bind("<Button-1>", self.verify)
+        b1.pack(side=TOP, padx=1, pady=1)
+
+    def verify(self,element):
+        verifydata.verify()
+        pass
+
+    def add_frame_ym(self):
+        frame = ttk.Frame(self.notebook)
+        entrydict = {}
+        self.notebook.add(frame, text="YANDEX", underline=0, sticky=tk.NE + tk.SW)
+        frame_top = ttk.Frame(frame)
+        frame_top.pack(side=TOP)
+        frame_top1 = ttk.Frame(frame)
+        frame_top1.pack(side=TOP)
+        frame_top1left = ttk.Frame(frame_top1)
+        frame_top1left.pack(side=LEFT)
+        frame_top1right = ttk.Frame(frame_top1)
+        frame_top1right.pack(side=RIGHT)
+        b1 = ttk.Button(frame_top1left, text="Yandex orders update on period")
+        b1.bind("<Button-1>", self.ym_update_orders)
+        b1.pack(side=TOP, padx=1, pady=1)
+
+        ttk.Label(frame_top, text="Date from").pack(side=LEFT, padx=10, pady=10)
+        date_from_element = DateEntry(
+            frame_top,
+            locale="ru_RU",
+            date_pattern="dd-mm-y",
+            width=12,
+            background="darkblue",
+            foreground="white",
+            borderwidth=2,
+        )
+        date_from_element.pack(side=LEFT, padx=10, pady=10)
+        ttk.Label(frame_top, text="to").pack(side=LEFT, padx=10, pady=10)
+        date_to_element = DateEntry(
+            frame_top,
+            locale="ru_RU",
+            date_pattern="dd-mm-y",
+            width=12,
+            background="darkblue",
+            foreground="white",
+            borderwidth=2,
+        )
+        date_to_element.pack(side=LEFT, padx=10, pady=10)
+        #entrydict["date_from_element"] = date_from_element
+        #entrydict["date_to_element"] = date_to_element
+        self.entry_dict["frame_ym"] = entrydict
+    def ym_update_orders(self,el):
+        datefrom, dateto = self.get_date_frame("frame_wb")
+        transfer_method.export_orders_from_ym2bq()
+        pass
 
     def add_frame_ozone(self):
         frame = ttk.Frame(self.notebook)
@@ -222,6 +287,10 @@ class App(tk.Tk):
         b2 = ttk.Button(frame_top1left, text="WB orders period")
         b2.bind("<Button-1>", self.wb_orders_period)
         b2.pack(side=TOP, padx=1, pady=1)
+        b2 = ttk.Button(frame_top1left, text="WB orders V2 period")
+        b2.bind("<Button-1>", self.wb_orders_period)
+        b2.pack(side=TOP, padx=1, pady=1)
+
         b2 = ttk.Button(frame_top1left, text="WB reportsale period")
         b2.bind("<Button-1>", self.wb_reportsale_period)
         b2.pack(side=TOP, padx=1, pady=1)
@@ -285,6 +354,20 @@ class App(tk.Tk):
     def wb_orders_period(self, bt):
         method = "orders"
         bqtable = "orders"
+        option = "byPeriod"
+        datefrom, dateto = self.get_date_frame("frame_wb")
+        transfer_method.wb_export(
+            method,
+            bqtable,
+            option,
+            datefromstr=datefrom.isoformat(),
+            datetostr=dateto.isoformat(),
+        )
+        pass
+
+    def wb_orders_period(self, bt):
+        method = "ordersv2"
+        bqtable = "ordersv2"
         option = "byPeriod"
         datefrom, dateto = self.get_date_frame("frame_wb")
         transfer_method.wb_export(

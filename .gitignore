@@ -620,3 +620,4 @@ MigrationBackup/
 /poetry.lock
 /xmldatafeed2gbq/config_wb.yml
 /xmldatafeed2gbq/config_ozon.yml
+/xmldatafeed2gbq/config_yandex.yml

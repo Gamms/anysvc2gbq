@@ -4,13 +4,13 @@ import bq_method
 import ozon_method
 import wb_client
 import yaml
+import yandex.yclient
 from client1c import daterange
 from dateutil import parser
 from loguru import logger
 from ozon_client import OZONApiClient
-
 from simplegui import clean_table_if_necessary, fill_date
-import yandex.yclient
+
 
 def export_orders_from_ozon2bq_updated_in_the_period(
     datarange, bqdataset, bqjsonservicefile, bqtable, configyml, method
@@ -38,7 +38,7 @@ def export_orders_from_ozon2bq_updated_in_the_period(
             ozon_method.OzonDataFilterType.updated_at,
         )
         if len(items) != 0:
-            if method == 'orders':
+            if method == "orders":
                 add_fields_from_orders_v3(apikey, clientid, items, ozonid)
 
             logger.info(f"Чистим  данные в {bqtable} по {len(items)} заказам")
@@ -80,24 +80,36 @@ def export_orders_from_ozon2bq_updated_in_the_period(
 
 def add_fields_from_orders_v3(apikey, clientid, items, ozonid):
     cli = OZONApiClient(clientid, apikey, ozonid)
-    min_date = min(items, key=lambda x: x['created_at'])['created_at']
-    max_date = max(items, key=lambda x: x['created_at'])['created_at']
-    logger.info(f"дополним данные заказа v3 из OZON {ozonid} c {min_date} по {max_date}:")
+    min_date = min(items, key=lambda x: x["created_at"])["created_at"]
+    max_date = max(items, key=lambda x: x["created_at"])["created_at"]
+    logger.info(
+        f"дополним данные заказа v3 из OZON {ozonid} c {min_date} по {max_date}:"
+    )
     orders_v3 = cli.get_orders_v3(min_date, max_date)
     for element_items in items:
-        filterlist = list(filter(lambda x: x['order_id'] == element_items['order_id'], orders_v3))
+        filterlist = list(
+            filter(lambda x: x["order_id"] == element_items["order_id"], orders_v3)
+        )
         if len(filterlist):
-            element_items['is_express'] = filterlist[0]['is_express']
-            element_items['delivery_method_name'] = filterlist[0]['delivery_method']['name']
-            element_items['delivery_method_warehouse'] = filterlist[0]['delivery_method']['warehouse']
-            element_items['delivery_method_tpl_provider'] = filterlist[0]['delivery_method']['tpl_provider']
-            element_items['tpl_integration_type'] = filterlist[0]['tpl_integration_type']
+            element_items["is_express"] = filterlist[0]["is_express"]
+            element_items["delivery_method_name"] = filterlist[0]["delivery_method"][
+                "name"
+            ]
+            element_items["delivery_method_warehouse"] = filterlist[0][
+                "delivery_method"
+            ]["warehouse"]
+            element_items["delivery_method_tpl_provider"] = filterlist[0][
+                "delivery_method"
+            ]["tpl_provider"]
+            element_items["tpl_integration_type"] = filterlist[0][
+                "tpl_integration_type"
+            ]
         else:
-            element_items['is_express'] = False
-            element_items['delivery_method_name'] = ''
-            element_items['delivery_method_warehouse'] = ''
-            element_items['delivery_method_tpl_provider'] = ''
-            element_items['tpl_integration_type'] = ''
+            element_items["is_express"] = False
+            element_items["delivery_method_name"] = ""
+            element_items["delivery_method_warehouse"] = ""
+            element_items["delivery_method_tpl_provider"] = ""
+            element_items["tpl_integration_type"] = ""
 
 
 def transfer_orders_transaction_ozon2bq_in_the_period(
@@ -137,7 +149,7 @@ def transfer_orders_transaction_ozon2bq_in_the_period(
                 ozon_data_filter_type,
             )
             if len(items) != 0:
-                if method == 'orders':
+                if method == "orders":
                     add_fields_from_orders_v3(apikey, clientid, items, ozonid)
 
                 logger.info(f"Чистим  данные в {bqtable} c {datefrom} по {dateto}")
@@ -278,10 +290,25 @@ def wb_export(
         wb_id = lkConfig["lk"]["bq_id"]
         apikey_v1 = lkConfig["lk"]["apikey"]
         apikey_v2 = lkConfig["lk"]["apikeyv2"]
+        if not lkConfig["lk"]["active"]:
+            logger.info(
+                f"Импорт из WB {wb_id} отключен в настройках (свойство active из yml)"
+            )
+
+            continue
+
         if method == "ordersv2":
             cli = wb_client.WBApiClient(wb_id, apikey_v2)
             datefrom, dateto = fill_date(
-                option, bqtable, datasetid, jsonkey, wb_id, field_date,'',datefromstr,datetostr
+                option,
+                bqtable,
+                datasetid,
+                jsonkey,
+                wb_id,
+                field_date,
+                "",
+                datefromstr,
+                datetostr,
             )
             logger.info(
                 f"Начало импорта {method} из WB {wb_id} c {datefrom} по {dateto}:"
@@ -314,9 +341,9 @@ def wb_export(
                         el["entrance"] = " "
                 del el["deliveryAddressDetails"]
                 del el["userInfo"]
-                checkTypeFieldFloat(el,'latitude')
-                checkTypeFieldFloat(el, 'longitude')
-                el['rid']=ozon_method.parse_int(el['rid'])
+                checkTypeFieldFloat(el, "latitude")
+                checkTypeFieldFloat(el, "longitude")
+                el["rid"] = ozon_method.parse_int(el["rid"])
 
                 orders[index] = el
 
@@ -333,7 +360,7 @@ def wb_export(
                     bqtable,
                     wb_id,
                     option,
-                    orders
+                    orders,
                 )
                 logger.info(f"Загружаем записи {method} из WB с {datefrom}:")
                 bq_method.export_js_to_bq(
@@ -560,24 +587,31 @@ def export_stocks_from_ozon2bq(bqdataset, bqjsonservicefile, bqtable, configyml)
             logger.info(text)
 
 
-def export_orders_from_ym2bq(bqdataset='YM', bqjsonservicefile='polar.json', bqtable='orders',
-                             configyml='config_yandex.yml'):
+def export_orders_from_ym2bq(
+    bqdataset="YM",
+    bqjsonservicefile="polar.json",
+    bqtable="orders",
+    configyml="config_yandex.yml",
+):
     with open(configyml) as f:
         config = yaml.safe_load(f)
 
     for lkConfig in config["lks"]:
-        campaign=lkConfig['lk']['campaign']
-        oath_id=lkConfig['lk']['oath_id']
-        oath_token = lkConfig['lk']['oath_token']
-        field_date = 'statusUpdateDate'
-        field_id = 'ycampaignid'
+        campaign = lkConfig["lk"]["campaign"]
+        oath_id = lkConfig["lk"]["oath_id"]
+        oath_token = lkConfig["lk"]["oath_token"]
+        field_date = "statusUpdateDate"
+        field_id = "ycampaignid"
         newlist = []
-        maxdatechange = bq_method.GetMaxRecord_v1(bqtable, bqdataset, bqjsonservicefile, field_date, int(campaign),
-                                               field_id)
+        maxdatechange = bq_method.GetMaxRecord_v1(
+            bqtable, bqdataset, bqjsonservicefile, field_date, int(campaign), field_id
+        )
         changes = True
         if maxdatechange.year == 1:
             maxdatechange = datetime.date(2021, 1, 1)
-            changes = False  # если таблица пустая, вначале загрузим заказы с начала года
+            changes = (
+                False  # если таблица пустая, вначале загрузим заказы с начала года
+            )
         else:
             maxdatechange = maxdatechange.date()
         client = yandex.yclient.YMApiClient(campaign, oath_id, oath_token)
@@ -585,36 +619,41 @@ def export_orders_from_ym2bq(bqdataset='YM', bqjsonservicefile='polar.json', bqt
         catalogCache = {}
         jsonCatalog = []
         for item in itemsCatalog:
-            offer = item['offer']
-            if offer.__contains__('vendorCode'):
-                catalogCache[offer['shopSku']] = offer['vendorCode']
-                jsonCatalog.append({'shopSku': offer['shopSku'], 'vendorCode': offer['vendorCode']})
+            offer = item["offer"]
+            if offer.__contains__("vendorCode"):
+                catalogCache[offer["shopSku"]] = offer["vendorCode"]
+                jsonCatalog.append(
+                    {"shopSku": offer["shopSku"], "vendorCode": offer["vendorCode"]}
+                )
 
         itemstotal = client.get_orders(maxdatechange, datetime.date.today(), changes)
 
         for el in itemstotal:
-            if el.__contains__('items') \
-                and type(el['items']) is list:  # проверим наличие финансового блока
+            if (
+                el.__contains__("items") and type(el["items"]) is list
+            ):  # проверим наличие финансового блока
                 sumCommision = 0
-                for commEl in el['commissions']:
-                    sumCommision = sumCommision + commEl['predicted']
+                for commEl in el["commissions"]:
+                    sumCommision = sumCommision + commEl["predicted"]
 
-                for item in el['items']:  # пробежимся по тч из заказа и объединим их в строку
+                for item in el[
+                    "items"
+                ]:  # пробежимся по тч из заказа и объединим их в строку
 
                     newdict = el | item
-                    newdict['deliveryRegionId'] = el['deliveryRegion']['id']
-                    newdict['deliveryRegionName'] = el['deliveryRegion']['name']
-                    for price in item['prices']:
-                        newdict[price['type'] + 'costPerItem'] = price['costPerItem']
-                        newdict[price['type'] + 'total'] = price['total']
+                    newdict["deliveryRegionId"] = el["deliveryRegion"]["id"]
+                    newdict["deliveryRegionName"] = el["deliveryRegion"]["name"]
+                    for price in item["prices"]:
+                        newdict[price["type"] + "costPerItem"] = price["costPerItem"]
+                        newdict[price["type"] + "total"] = price["total"]
 
-                    for key, value in item['warehouse'].items():
-                        newdict['wh' + key] = value
+                    for key, value in item["warehouse"].items():
+                        newdict["wh" + key] = value
 
-                    newdict['ycampaignid'] = campaign
-                    newdict['dateExport'] = datetime.datetime.today().isoformat()
-                    newdict['sumCommision'] = sumCommision
-                    newdict['articleCustomer'] = catalogCache.get(newdict['shopSku'])
+                    newdict["ycampaignid"] = campaign
+                    newdict["dateExport"] = datetime.datetime.today().isoformat()
+                    newdict["sumCommision"] = sumCommision
+                    newdict["articleCustomer"] = catalogCache.get(newdict["shopSku"])
                     for key, value in list(newdict.items()):  # удалим ненужные элементы
                         if type(value) is list or type(value) is dict:
                             del newdict[key]
@@ -623,11 +662,23 @@ def export_orders_from_ym2bq(bqdataset='YM', bqjsonservicefile='polar.json', bqt
         if len(itemstotal) > 0 and maxdatechange.year != 1:
             filterList = []
 
-            filterList.append({'fieldname': field_date, 'operator': '>=', 'value': maxdatechange.strftime("%Y-%m-%d")})
-            filterList.append({'fieldname': field_id, 'operator': '=', 'value': int(campaign)})
-            bq_method.DeleteRowFromTable(bqtable, bqdataset, bqjsonservicefile, filterList)
+            filterList.append(
+                {
+                    "fieldname": field_date,
+                    "operator": ">=",
+                    "value": maxdatechange.strftime("%Y-%m-%d"),
+                }
+            )
+            filterList.append(
+                {"fieldname": field_id, "operator": "=", "value": int(campaign)}
+            )
+            bq_method.DeleteRowFromTable(
+                bqtable, bqdataset, bqjsonservicefile, filterList
+            )
 
-        bq_method.export_js_to_bq(newlist, bqtable, bqjsonservicefile, bqdataset,logger,[])
+        bq_method.export_js_to_bq(
+            newlist, bqtable, bqjsonservicefile, bqdataset, logger, []
+        )
 
 
 def checkTypeFieldFloat(newdict, elfield):

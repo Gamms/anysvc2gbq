@@ -10,6 +10,7 @@ import bq_method
 import method_telegram
 import ozon_method
 import transfer_method
+import verifydata
 import wb_client
 import yaml
 from client1c import daterange
@@ -17,7 +18,7 @@ from dateutil import parser
 from dateutil.relativedelta import relativedelta
 from loguru import logger
 from tkcalendar import DateEntry
-import verifydata
+
 
 class QueueHandler(logging.Handler):
     """Class to send logging records to a queue
@@ -109,6 +110,7 @@ class App(tk.Tk):
         console_frame.rowconfigure(0, weight=1)
         self.console = ConsoleUi(console_frame)
         self.console.frame.pack()
+
     def add_frame_verify(self):
         frame = ttk.Frame(self.notebook)
         self.notebook.add(frame, text="Verify data", underline=0, sticky=tk.NE + tk.SW)
@@ -124,7 +126,7 @@ class App(tk.Tk):
         b1.bind("<Button-1>", self.verify)
         b1.pack(side=TOP, padx=1, pady=1)
 
-    def verify(self,element):
+    def verify(self, element):
         verifydata.verify()
         pass
 
@@ -166,10 +168,11 @@ class App(tk.Tk):
             borderwidth=2,
         )
         date_to_element.pack(side=LEFT, padx=10, pady=10)
-        #entrydict["date_from_element"] = date_from_element
-        #entrydict["date_to_element"] = date_to_element
+        # entrydict["date_from_element"] = date_from_element
+        # entrydict["date_to_element"] = date_to_element
         self.entry_dict["frame_ym"] = entrydict
-    def ym_update_orders(self,el):
+
+    def ym_update_orders(self, el):
         datefrom, dateto = self.get_date_frame("frame_wb")
         transfer_method.export_orders_from_ym2bq()
         pass
@@ -288,7 +291,7 @@ class App(tk.Tk):
         b2.bind("<Button-1>", self.wb_orders_period)
         b2.pack(side=TOP, padx=1, pady=1)
         b2 = ttk.Button(frame_top1left, text="WB orders V2 period")
-        b2.bind("<Button-1>", self.wb_orders_period)
+        b2.bind("<Button-1>", self.wb_ordersv2_period)
         b2.pack(side=TOP, padx=1, pady=1)
 
         b2 = ttk.Button(frame_top1left, text="WB reportsale period")
@@ -365,7 +368,7 @@ class App(tk.Tk):
         )
         pass
 
-    def wb_orders_period(self, bt):
+    def wb_ordersv2_period(self, bt):
         method = "ordersv2"
         bqtable = "ordersv2"
         option = "byPeriod"

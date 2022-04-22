@@ -174,6 +174,15 @@ class Client1c:
             liststock.append(dict)
         return liststock
 
+    def delete_changes_from_exchangeplan(self) -> None:
+        if self.connection == None:
+            raise "Нет подключения к базе 1С"
+        NodeExchange = self.connection.ПланыОбмена.ОбменУправлениеПредприятиемРозничнаяТорговля.findBycode(
+            "002"
+        )
+        self.connection.ПланыОбмена.DeleteChangeRecords(NodeExchange, 1)
+        return None
+
 
 def upload_from_1c(
     config, bqjsonservicefile, bqdataset, bqtable, datestock_start, datestock_end
@@ -404,3 +413,4 @@ def export_price_to_bq(fileconfi1c, bqjsonservicefile, bqdataset, bqtable):
     bq_method.export_js_to_bq(
         liststock, bqtable, bqjsonservicefile, bqdataset, logger, csvfields
     )
+    cli.delete_changes_from_exchangeplan()

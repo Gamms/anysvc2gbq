@@ -392,6 +392,7 @@ def export_price_to_bq(fileconfi1c, bqjsonservicefile, bqdataset, bqtable):
     # with open("personal.json", "w") as json_file:
     #    json.dump(liststock, json_file)
     orderidlist = []
+    orderidliststr = ""
     for elitems in liststock:
         if elitems["doc_guid"] not in orderidlist:
             orderidlist.append(elitems["doc_guid"])

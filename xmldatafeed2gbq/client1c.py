@@ -146,7 +146,7 @@ class Client1c:
         NodeExchange = self.connection.ПланыОбмена.ОбменУправлениеПредприятиемРозничнаяТорговля.findBycode(
             "002"
         )
-        self.connection.ПланыОбмена.ВыбратьИзменения(NodeExchange, 1)
+        self.connection.ПланыОбмена.SelectChanges(NodeExchange, 1)
         textquery = get_query_price_changes()
         query = self.connection.NewObject("Query", textquery)
 

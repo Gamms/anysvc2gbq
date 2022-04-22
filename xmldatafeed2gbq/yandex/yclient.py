@@ -1,6 +1,8 @@
 import requests
 
 class   YMApiClient:
+    #регистрация приложания https://oauth.yandex.ru/client/new
+    #получение токена https://oauth.yandex.ru/authorize?response_type=token&client_id=<идентификатор приложения>
     def __init__(self,campaign_id,oath_clientid,oath_tocken,endpoint='https://api.partner.market.yandex.ru/v2/campaigns/'):
         self.endpoint = endpoint
         self.oath_tocken = oath_tocken

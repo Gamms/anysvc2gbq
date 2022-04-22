@@ -169,7 +169,7 @@ class Client1c:
             dict["date_price"] = choose.date_price.today().isoformat()
             dict["price_name"] = choose.price_name
             dict["price_code"] = choose.price_code
-            dict["dateExport"] = datetime.date.today().isoformat()
+            dict["dateExport"] = datetime.date.date().isoformat()
             dict["doc_guid"] = self.connection.xmlstring(choose.doc_ref)
             liststock.append(dict)
         return liststock

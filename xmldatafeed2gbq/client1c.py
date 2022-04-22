@@ -166,7 +166,7 @@ class Client1c:
             dict["finished_product"] = choose.finished_product
             dict["article"] = choose.article
             dict["price"] = choose.price
-            dict["date_price"] = choose.date_price.isoformat()
+            dict["date_price"] = choose.date_price.today().isoformat()
             dict["price_name"] = choose.price_name
             dict["price_code"] = choose.price_code
             dict["dateExport"] = datetime.date.today().isoformat()

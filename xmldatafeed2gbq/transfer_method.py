@@ -343,6 +343,7 @@ def wb_export(
                 del el["userInfo"]
                 checkTypeFieldFloat(el, "latitude")
                 checkTypeFieldFloat(el, "longitude")
+                checkTypeFieldFloat(el, "totalPrice")
                 el["rid"] = ozon_method.parse_int(el["rid"])
 
                 orders[index] = el

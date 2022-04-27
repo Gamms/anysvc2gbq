@@ -426,6 +426,7 @@ def wb_export(
             logger.info(
                 f"Начало импорта {method} из WB {wb_id} c {datefrom} по {dateto}:"
             )
+            field_list = []
             if method == "sales":
                 orders = cli.get_sales_v1(datefrom, dateto, option, field_date)
             elif method == "reportsale":
@@ -440,6 +441,24 @@ def wb_export(
             elif method == "stocks_v1":
                 field_date = "date_stocks"
                 orders = cli.get_stocks_v1()
+            elif method == "invoice_v1":
+                field_date = "lastChangeDate"
+                field_list.append({"incomeid": "INTEGER"})
+                field_list.append({"Number": "STRING"})
+                field_list.append({"Date": "DATE"})
+                field_list.append({"lastChangeDate": "TIMESTAMP"})
+                field_list.append({"SupplierArticle": "STRING"})
+                field_list.append({"TechSize": "STRING"})
+                field_list.append({"Barcode": "DATE"})
+                field_list.append({"Quantity": "INTEGER"})
+                field_list.append({"totalPrice": "FLOAT"})
+                field_list.append({"dateClose": "DATE"})
+                field_list.append({"warehouseName": "STRING"})
+                field_list.append({"nmid": "INTEGER"})
+                field_list.append({"status": "STRING"})
+                orders = cli.get_invoice_v1()
+            else:
+                raise f"Неподдерживаемый метод выгрузки из wb:{method}"
 
             if len(orders) > 0:
                 clean_table_if_necessary(
@@ -461,11 +480,11 @@ def wb_export(
                         for el in orders:
                             el["date_stocks"] = datestock.isoformat()
                         bq_method.export_js_to_bq(
-                            orders, bqtable, jsonkey, datasetid, logger, []
+                            orders, bqtable, jsonkey, datasetid, logger, field_list
                         )
                 else:
                     bq_method.export_js_to_bq(
-                        orders, bqtable, jsonkey, datasetid, logger, []
+                        orders, bqtable, jsonkey, datasetid, logger, field_list
                     )
             else:
                 logger.info("Нет данных")

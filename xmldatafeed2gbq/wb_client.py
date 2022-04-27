@@ -83,6 +83,21 @@ class WBApiClient:
             )
         return jsresult
 
+    def get_invoice_v1(self, datefrom, dateto, option, filterfielddate):
+        uri = "https://suppliers-stats.wildberries.ru/api/v1/supplier/incomes"
+        jsresult = []
+        params = [
+            ("dateFrom", datefrom.isoformat()),
+            ("dateto", dateto.isoformat()),
+            ("key", self.apikey_v1),
+        ]
+        res = _make_request_v1(uri, params)
+        if res != None:
+            jsresult = transform_res2js(
+                filterfielddate, res, datefrom, self.wbid, option, dateto
+            )
+        return jsresult
+
     def get_stocks_v1(self):
         url = "https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks"
         filterfielddate = "date_stocks"
@@ -205,9 +220,17 @@ def transform_res2js(filter_field_date, res, datefrom, wb_id, option, dateto):
             pass
     else:
         jsresult = jsres
-    float_fields=("customer_reward","finishedPrice",'sale_percent','priceWithDisc','totalPrice','ppvz_reward','retail_price_withdisc_rub')
-    int_fields=("techSize","ts_name",'ppvz_inn')
-    str_fields=('gNumber','sticker')
+    float_fields = (
+        "customer_reward",
+        "finishedPrice",
+        "sale_percent",
+        "priceWithDisc",
+        "totalPrice",
+        "ppvz_reward",
+        "retail_price_withdisc_rub",
+    )
+    int_fields = ("techSize", "ts_name", "ppvz_inn")
+    str_fields = ("gNumber", "sticker")
     for el in jsresult:
         if "number" in el:
             del el["number"]

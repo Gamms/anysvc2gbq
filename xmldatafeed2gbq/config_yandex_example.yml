@@ -6,10 +6,12 @@ lks:
       description: name
       id_organisation_1c: organisation code
       id_partner_1c: partner code
+      id_warehouse: id warehouse from lk for import stocks
   - lk:
       oath_id: oath id 1
       oath_token: oath token 1
       campaign: id campaing from LK 1
       description: name
-      id_organisation_1c: organisation code
-      id_partner_1c: partner code
+      id_organisation_1c: organisation code from 1c for export stocks
+      id_partner_1c: partner code 1c for export stocks
+      id_warehouse: id warehouse from lk for import stocks

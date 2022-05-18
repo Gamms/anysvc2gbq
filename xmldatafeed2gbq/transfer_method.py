@@ -5,7 +5,7 @@ import ozon_method
 import wb_client
 import yaml
 import yandex.yclient
-from client1c import daterange
+from client1c import Client1c, daterange
 from dateutil import parser
 from loguru import logger
 from ozon_client import OZONApiClient
@@ -704,3 +704,34 @@ def export_orders_from_ym2bq(
 def checkTypeFieldFloat(newdict, elfield):
     if newdict.__contains__(elfield) and type(newdict[elfield]) is not float:
         newdict[elfield] = ozon_method.parse_float(newdict[elfield])
+
+
+def export_stocks_from_1c2ym(config_1c, config_ym):
+    with open(config_1c, encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+    cli = Client1c(config)
+    cli.connect()
+
+    with open(config_ym) as f:
+        config = yaml.safe_load(f)
+
+    for lkConfig in config["lks"]:
+        campaign = lkConfig["lk"]["campaign"]
+        oath_id = lkConfig["lk"]["oath_id"]
+        oath_token = lkConfig["lk"]["oath_token"]
+        id_organisation_1c = lkConfig["lk"]["id_organisation_1c"]
+        id_partner_1c = lkConfig["lk"]["id_partner_1c"]
+        liststock = cli.get_stocks_for_marketplace(id_organisation_1c, id_partner_1c)
+        if liststock == None:
+            logger.critical("Нет подключения к базе 1С!")
+            return
+
+        client = yandex.yclient.YMApiClient(campaign, oath_id, oath_token)
+        result = client.put_stocks(liststock)
+        if result != "Ok":
+            logger.critical("Ошибка выгрузки остатков!")
+        else:
+            logger.info(
+                f"Выгружены остатки в яндекс по организации {id_organisation_1c}, количество:{len(liststock)}"
+            )
+            return

@@ -38,6 +38,7 @@ class periodOption(str, Enum):
 class yandexOperation(str, Enum):
     orders = "orders"
 
+
 class ozonOperation(str, Enum):
     orders = "orders"
     transaction = "transaction"
@@ -51,7 +52,6 @@ class wbOperation(str, Enum):
     report = "report"
     stock = "stock"
     orders_v2 = "orders_v2"
-
 
 
 def version_callback(print_version: bool) -> None:
@@ -295,19 +295,33 @@ def upload_from_wb2bq(
         datasetid=bqdataset,
     )
 
+
 @logger.catch
 @app.command()
-def upload_from_yandex2bq(operation:yandexOperation,
-                          bqjsonservicefile: str = "polar.json",
-                          bqdataset: str = "YM",
-                          bqtable: str = "orders",
-                          fileconfigyandex: str = "config_yandex.yml",):
-    if operation==yandexOperation.orders:
-        transfer_method.export_orders_from_ym2bq(bqdataset,bqjsonservicefile,bqtable,fileconfigyandex)
+def upload_from_yandex2bq(
+    operation: yandexOperation,
+    bqjsonservicefile: str = "polar.json",
+    bqdataset: str = "YM",
+    bqtable: str = "orders",
+    fileconfigyandex: str = "config_yandex.yml",
+):
+    if operation == yandexOperation.orders:
+        transfer_method.export_orders_from_ym2bq(
+            bqdataset, bqjsonservicefile, bqtable, fileconfigyandex
+        )
     else:
-        logger.error(f'Operation {operation} dont recognized!')
+        logger.error(f"Operation {operation} dont recognized!")
 
     pass
+
+
+@logger.catch
+@app.command()
+def upload_stocks_from_1c2ym(
+    fileconfig1c: str = "client1C_config.yml",
+    fileconfigyandex: str = "config_yandex.yml",
+):
+    transfer_method.export_stocks_from_1c2ym(fileconfig1c, fileconfigyandex)
 
 
 if __name__ == "__main__":

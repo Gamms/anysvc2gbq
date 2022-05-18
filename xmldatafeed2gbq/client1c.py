@@ -183,6 +183,30 @@ class Client1c:
         self.connection.ПланыОбмена.DeleteChangeRecords(NodeExchange, 1)
         return None
 
+    def get_stocks_for_marketplace(self, id_organisation, id_partner):
+        if self.connection == None:
+            raise "Нет подключения к базе 1С"
+        textquery = get_query_stocks_for_marketplace()
+        query = self.connection.NewObject("Query", textquery)
+
+        query.SetParameter(
+            "ОрганизацияКод",
+            id_organisation,
+        )
+        query.SetParameter(
+            "КонтрагентКод",
+            id_partner,
+        )
+
+        choose = query.execute().choose()
+        liststock = []
+        while choose.next():
+            dict = {}
+            dict["id_sku"] = choose.id_sku
+            dict["stock"] = choose.stock
+            liststock.append(dict)
+        return liststock
+
 
 def upload_from_1c(
     config, bqjsonservicefile, bqdataset, bqtable, datestock_start, datestock_end

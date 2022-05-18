@@ -145,6 +145,9 @@ class App(tk.Tk):
         b1 = ttk.Button(frame_top1left, text="Yandex orders update on period")
         b1.bind("<Button-1>", self.ym_update_orders)
         b1.pack(side=TOP, padx=1, pady=1)
+        b1 = ttk.Button(frame_top1left, text="Stocks 1c->YM")
+        b1.bind("<Button-1>", self.ym_export_stocks)
+        b1.pack(side=TOP, padx=1, pady=1)
 
         ttk.Label(frame_top, text="Date from").pack(side=LEFT, padx=10, pady=10)
         date_from_element = DateEntry(
@@ -176,6 +179,11 @@ class App(tk.Tk):
         datefrom, dateto = self.get_date_frame("frame_wb")
         transfer_method.export_orders_from_ym2bq()
         pass
+
+    def ym_export_stocks(self):
+        fileconfig1c = "client1C_config.yml"
+        fileconfigyandex = "config_yandex.yml"
+        transfer_method.export_stocks_from_1c2ym(fileconfig1c, fileconfigyandex)
 
     def add_frame_ozone(self):
         frame = ttk.Frame(self.notebook)

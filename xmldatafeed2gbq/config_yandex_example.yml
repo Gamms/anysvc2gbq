@@ -4,8 +4,12 @@ lks:
       oath_token: oath token
       campaign: id campaing from LK
       description: name
+      id_organisation_1c: organisation code
+      id_partner_1c: partner code
   - lk:
       oath_id: oath id 1
       oath_token: oath token 1
       campaign: id campaing from LK 1
       description: name
+      id_organisation_1c: organisation code
+      id_partner_1c: partner code

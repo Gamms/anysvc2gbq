@@ -725,7 +725,7 @@ def export_stocks_from_1c2ym(config_1c, config_ym):
         liststock = cli.get_stocks_for_marketplace(id_organisation_1c, id_partner_1c)
         if liststock == None:
             logger.critical("Нет подключения к базе 1С!")
-            return
+            continue
 
         client = yandex.yclient.YMApiClient(campaign, oath_id, oath_token)
         result = client.put_stocks(liststock, id_warehouse)
@@ -735,4 +735,4 @@ def export_stocks_from_1c2ym(config_1c, config_ym):
             logger.info(
                 f"Выгружены остатки в яндекс по организации {id_organisation_1c}, количество:{len(liststock)}"
             )
-            return
+            continue

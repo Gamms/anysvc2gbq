@@ -105,7 +105,7 @@ class YMApiClient:
                         {
                             "type": "FIT",
                             "count": el_list["stock"],
-                            "updatedAt": datetime.datetime.now().isoformat(),
+                            "updatedAt": f"{datetime.datetime.now().isoformat()}+03:00",
                         }
                     ],
                 }
@@ -113,14 +113,14 @@ class YMApiClient:
             count_record = count_record + 1
             if count_record == 2000:
                 # яндекс принимает только по 2000 позиций
-                result = requests.post(uri, headers=headers, json=dict_json)
+                result = requests.put(uri, headers=headers, json=dict_json)
                 dict_json = {"skus": []}
                 count_record = 0
                 if result.status_code != 200:
                     return "Error"
 
         if count_record > 0:
-            result = requests.post(uri, headers=headers, json=dict_json)
+            result = requests.put(uri, headers=headers, json=dict_json)
             if result.status_code != 200:
                 return "Error"
         return "Ok"

@@ -129,6 +129,7 @@ class Client1c:
             dict["print_color"] = choose.print_color
             dict["textile_n"] = choose.textile_n
             dict["textile_group"] = choose.textile_group
+            dict["item_type"] = choose.item_type
             for_vpr = ""
             if dict["form"] is not None:
                 for_vpr = dict["form"]

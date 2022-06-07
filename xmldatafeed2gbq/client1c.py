@@ -466,7 +466,7 @@ def export_order_status_history_from_1c2bq(config_1c,bqjsonservicefile,bqdataset
         config = yaml.safe_load(f)
     cli = Client1c(config)
     cli.connect()
-    resultlist=cli.get_query_result(textquery)
+    resultlist=cli.get_order_history_status()
     bq_method.export_js_to_bq(
         resultlist, bqtable, bqjsonservicefile, bqdataset, logger,[]
     )

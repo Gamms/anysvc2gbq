@@ -31,7 +31,6 @@ def get_schema_field_from_dict(fields: dict) -> list:
     return schema
 
 
-@logger.catch
 def export_js_to_bq(js, tableid, key_path, dataset_id, loger, fields_list):
     table_id = tableid
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path

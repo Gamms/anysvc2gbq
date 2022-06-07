@@ -208,14 +208,21 @@ class Client1c:
             liststock.append(dict)
         return liststock
 
-    def get_query_result(self, textquery)->list:
+    def get_order_history_status(self)->list:
         if self.connection == None:
             raise "Нет подключения к базе 1С"
+        textquery = get_query_order_history_status()
         query = self.connection.NewObject("Query", textquery)
+
         choose = query.execute().choose()
         resultlist = []
         while choose.next():
             dict = {}
+            dict['status_date']=choose.status_date
+            dict['status_name'] = choose.status_name
+            dict['order_date'] = choose.order_date
+            dict['order_number'] = choose.order_number
+            dict['updated_by'] = choose.updated_by
             resultlist.append(dict)
         return resultlist
 
@@ -459,7 +466,6 @@ def export_order_status_history_from_1c2bq(config_1c,bqjsonservicefile,bqdataset
         config = yaml.safe_load(f)
     cli = Client1c(config)
     cli.connect()
-    textquery=get_query_order_history_status()
     resultlist=cli.get_query_result(textquery)
     bq_method.export_js_to_bq(
         resultlist, bqtable, bqjsonservicefile, bqdataset, logger,[]

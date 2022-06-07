@@ -454,7 +454,7 @@ def export_price_to_bq(fileconfi1c, bqjsonservicefile, bqdataset, bqtable):
     )
     cli.delete_changes_from_exchangeplan()
 
-def export_order_status_history_from_1c2bq(config_1c,bqdataset, bqjsonservicefile, bqtable):
+def export_order_status_history_from_1c2bq(config_1c,bqjsonservicefile,bqdataset,  bqtable):
     with open(config_1c, encoding="utf-8") as f:
         config = yaml.safe_load(f)
     cli = Client1c(config)

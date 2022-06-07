@@ -218,9 +218,9 @@ class Client1c:
         resultlist = []
         while choose.next():
             dict = {}
-            dict['status_date']=choose.status_date
+            dict['status_date']=choose.status_date.isoformat()
             dict['status_name'] = choose.status_name
-            dict['order_date'] = choose.order_date
+            dict['order_date'] = choose.order_date.date().isoformat()
             dict['order_number'] = choose.order_number
             dict['updated_by'] = choose.updated_by
             resultlist.append(dict)

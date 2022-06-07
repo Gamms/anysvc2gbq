@@ -211,7 +211,6 @@ class Client1c:
     def get_query_result(self, textquery)->list:
         if self.connection == None:
             raise "Нет подключения к базе 1С"
-        textquery = get_query_stocks_for_marketplace()
         query = self.connection.NewObject("Query", textquery)
         choose = query.execute().choose()
         resultlist = []

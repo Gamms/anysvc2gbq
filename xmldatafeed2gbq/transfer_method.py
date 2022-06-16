@@ -400,7 +400,7 @@ def wb_export(
             else:
                 logger.info("Нет данных")
             logger.info(f"end")
-        elif method in ("sales", "reportsale", "orders", "stocks_v1"):
+        elif method in ("sales", "reportsale", "orders", "stocks_v1","invoice_v1"):
             cli = wb_client.WBApiClient(wb_id, key_v1=apikey_v1, key_v2=apikey_v2)
             period = False
             if method == "stocks_v1":
@@ -427,12 +427,16 @@ def wb_export(
                 f"Начало импорта {method} из WB {wb_id} c {datefrom} по {dateto}:"
             )
             field_list = []
+            idfield='odid'
             if method == "sales":
                 orders = cli.get_sales_v1(datefrom, dateto, option, field_date)
             elif method == "reportsale":
                 field_date = "rr_dt"
                 orders = cli.get_reportsale_v1(datefrom, dateto, option, field_date)
                 # определим дату минимальную из полученных данных, для очистки в  bq
+                if len(orders)==0:
+                    logger.info(f'Нет данных для {wb_id} метод {method} период с {datefrom} по {dateto}')
+                    continue
                 datefrom = parser.parse(
                     min(orders, key=lambda x: x[field_date])[field_date]
                 ).replace(tzinfo=None)
@@ -442,23 +446,29 @@ def wb_export(
                 field_date = "date_stocks"
                 orders = cli.get_stocks_v1()
             elif method == "invoice_v1":
+                idfield='incomeId'
                 field_date = "lastChangeDate"
+                field_list.append({"wb_id": "STRING"})
+                field_list.append({"dateExport": "TIMESTAMP"})
                 field_list.append({"incomeid": "INTEGER"})
                 field_list.append({"Number": "STRING"})
                 field_list.append({"Date": "DATE"})
                 field_list.append({"lastChangeDate": "TIMESTAMP"})
                 field_list.append({"SupplierArticle": "STRING"})
                 field_list.append({"TechSize": "STRING"})
-                field_list.append({"Barcode": "DATE"})
+                field_list.append({"Barcode": "STRING"})
                 field_list.append({"Quantity": "INTEGER"})
                 field_list.append({"totalPrice": "FLOAT"})
                 field_list.append({"dateClose": "DATE"})
                 field_list.append({"warehouseName": "STRING"})
                 field_list.append({"nmid": "INTEGER"})
                 field_list.append({"status": "STRING"})
-                orders = cli.get_invoice_v1()
-            else:
-                raise f"Неподдерживаемый метод выгрузки из wb:{method}"
+                field_list.append({"date_accepted": "TIMESTAMP"})
+                field_list.append({"date_acceptance": "TIMESTAMP"})
+                field_list.append({"date_warehousecheck": "TIMESTAMP"})
+                field_list.append({"date_financecheck": "TIMESTAMP"})
+
+                orders = cli.get_invoice_v1(datefrom, dateto, option, field_date)
 
             if len(orders) > 0:
                 clean_table_if_necessary(
@@ -473,6 +483,7 @@ def wb_export(
                     wb_id,
                     option,
                     orders,
+                    idfield
                 )
                 logger.info(f"Загружаем записи {method} из WB с {datefrom}:")
                 if period == True:
@@ -489,6 +500,8 @@ def wb_export(
             else:
                 logger.info("Нет данных")
             logger.info(f"end")
+        else:
+            raise f"Неподдерживаемый метод выгрузки из wb:{method}"
 
 
 def transfer_orders_transaction_ozon2bq_in_the_period(
@@ -736,3 +749,6 @@ def export_stocks_from_1c2ym(config_1c, config_ym):
                 f"Выгружены остатки в яндекс по организации {id_organisation_1c}, количество:{len(liststock)}"
             )
         continue
+
+
+

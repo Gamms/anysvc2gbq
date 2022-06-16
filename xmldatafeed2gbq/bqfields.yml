@@ -70,3 +70,63 @@ dataset:
     lastChangeDate: TIMESTAMP
     subject: STRING
     number: STRING
+  reportsale:
+   bonus_type_name: STRING
+   ppvz_office_name: STRING
+   site_country: STRING
+   declaration_number: STRING
+   ppvz_supplier_name: STRING
+   ppvz_supplier_id: INTEGER
+   ppvz_office_id: INTEGER
+   sticker_id: INTEGER
+   ppvz_vw_nds: FLOAT
+   ppvz_reward: FLOAT
+   brand_name: STRING
+   ppvz_sales_commission: FLOAT
+   realizationreport_id: INTEGER
+   ppvz_kvw_prc_base: FLOAT
+   gi_id: INTEGER
+   ppvz_spp_prc: FLOAT
+   delivery_amount: INTEGER
+   rid: INTEGER
+   return_amount: INTEGER
+   supplier_promo: INTEGER
+   sa_name: STRING
+   retail_price_withdisc_rub: FLOAT
+   shk_id: INTEGER
+   doc_type_name: STRING
+   barcode: INTEGER
+   rr_dt: TIMESTAMP
+   sale_dt: TIMESTAMP
+   order_dt: TIMESTAMP
+   office_name: STRING
+   dateExport: TIMESTAMP
+   ppvz_vw: FLOAT
+   subject_name: STRING
+   sale_percent: FLOAT
+   ppvz_inn: INTEGER
+   delivery_rub: FLOAT
+   commission_percent: FLOAT
+   retail_amount: FLOAT
+   supplier_oper_name: STRING
+   retail_price: INTEGER
+   wb_id: STRING
+   quantity: INTEGER
+   ppvz_for_pay: FLOAT
+   ts_name: INTEGER
+   ppvz_kvw_prc: FLOAT
+   product_discount_for_report: INTEGER
+   nm_id: INTEGER
+   gi_box_type_name: STRING
+   rrd_id: INTEGER
+   suppliercontract_code: STRING
+   supplier_spp: INTEGER
+   for_pay_nds: INTEGER
+   for_pay: FLOAT
+   supplier_reward: FLOAT
+   customer_reward: FLOAT
+   nds: INTEGER
+   retail_commission: FLOAT
+   cost_amount: INTEGER
+
+

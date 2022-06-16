@@ -7,7 +7,7 @@ import method_telegram
 import transfer_method
 import typer
 import yaml
-from client1c import export_item_to_bq, export_price_to_bq, upload_from_1c
+from client1c import export_item_to_bq, export_price_to_bq, upload_from_1c,export_order_status_history_from_1c2bq
 from common_type import periodOption
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
@@ -75,6 +75,7 @@ class wbOperation(str, Enum):
     report = "report"
     stock = "stock"
     orders_v2 = "orders_v2"
+    invoice = "invoice"
 
 
 def version_callback(print_version: bool) -> None:
@@ -273,6 +274,16 @@ def uploadfrom1C_price(
 ) -> None:
     export_price_to_bq(fileconfig1c, bqjsonservicefile, bqdataset, bqtable)
 
+@logger.catch
+@app.command()
+def uploadfrom1C_orders_history_status(
+    bqjsonservicefile: str = "polar.json",
+    bqdataset: str = "RefTable",
+    bqtable: str = "orders_history_status1C",
+    fileconfig1c: str = "client1C_config.yml",
+) -> None:
+    export_order_status_history_from_1c2bq(fileconfig1c, bqjsonservicefile, bqdataset, bqtable)
+
 
 @logger.catch
 @app.command()
@@ -305,6 +316,8 @@ def upload_from_wb2bq(
         method = "reportsale"
     elif operation == wbOperation.orders_v2:
         method = "ordersv2"
+    elif operation == wbOperation.orders_v2:
+        method = "invoice_v1"
     else:
         raise "Не настроена выгрузка для " + operation
 

@@ -520,7 +520,7 @@ requests = ">=2.27.1,<3.0.0"
 
 [[package]]
 name = "nuitka"
-version = "0.7.6"
+version = "0.9"
 description = "Python compiler with full language support and CPython compatibility"
 category = "main"
 optional = false
@@ -977,7 +977,7 @@ python-versions = "!=3.0.*,!=3.1.*,!=3.2.*,!=3.3.*,!=3.4.*,>=2.7"
 [metadata]
 lock-version = "1.1"
 python-versions = "~3.10"
-content-hash = "819fbf20f0ef4034d7274d93cb8f7ec8ee063df9b36f576fce751b8512fa0568"
+content-hash = "4c2c2a55492407e36055c036317446e99e8ff79a3e888c014f5abeff989f4369"
 
 [metadata.files]
 astroid = [
@@ -1294,7 +1294,7 @@ notifiers = [
     {file = "notifiers-1.3.3.tar.gz", hash = "sha256:9fd8d95ab1ebcd3852423755aa90cbb0f72a805ca77af0d8c9ad7af445f58399"},
 ]
 nuitka = [
-    {file = "Nuitka-0.7.6.tar.gz", hash = "sha256:b52d007517b41c68b62806fec2e81aa2a56932af4a4017c16ad8b5163704f828"},
+    {file = "Nuitka-0.9.tar.gz", hash = "sha256:085285ebcd8866ec3a462d3bd604b54cf394fea095fc1fff7d23950c1359db0a"},
 ]
 packaging = [
     {file = "packaging-21.3-py3-none-any.whl", hash = "sha256:ef103e05f519cdc783ae24ea4e2e0f508a9c99b2d4969652eed6a2e1ea5bd522"},

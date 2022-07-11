@@ -400,7 +400,7 @@ def wb_export(
             else:
                 logger.info("Нет данных")
             logger.info(f"end")
-        elif method in ("sales", "reportsale", "orders", "stocks_v1","invoice_v1"):
+        elif method in ("sales", "reportsale", "orders", "stocks_v1", "invoice_v1"):
             cli = wb_client.WBApiClient(wb_id, key_v1=apikey_v1, key_v2=apikey_v2)
             period = False
             if method == "stocks_v1":
@@ -427,15 +427,17 @@ def wb_export(
                 f"Начало импорта {method} из WB {wb_id} c {datefrom} по {dateto}:"
             )
             field_list = []
-            idfield='odid'
+            idfield = "odid"
             if method == "sales":
                 orders = cli.get_sales_v1(datefrom, dateto, option, field_date)
             elif method == "reportsale":
                 field_date = "rr_dt"
                 orders = cli.get_reportsale_v1(datefrom, dateto, option, field_date)
                 # определим дату минимальную из полученных данных, для очистки в  bq
-                if len(orders)==0:
-                    logger.info(f'Нет данных для {wb_id} метод {method} период с {datefrom} по {dateto}')
+                if len(orders) == 0:
+                    logger.info(
+                        f"Нет данных для {wb_id} метод {method} период с {datefrom} по {dateto}"
+                    )
                     continue
                 datefrom = parser.parse(
                     min(orders, key=lambda x: x[field_date])[field_date]
@@ -446,7 +448,7 @@ def wb_export(
                 field_date = "date_stocks"
                 orders = cli.get_stocks_v1()
             elif method == "invoice_v1":
-                idfield='incomeId'
+                idfield = "incomeId"
                 field_date = "lastChangeDate"
                 field_list.append({"wb_id": "STRING"})
                 field_list.append({"dateExport": "TIMESTAMP"})
@@ -483,7 +485,7 @@ def wb_export(
                     wb_id,
                     option,
                     orders,
-                    idfield
+                    idfield,
                 )
                 logger.info(f"Загружаем записи {method} из WB с {datefrom}:")
                 if period == True:
@@ -625,6 +627,8 @@ def export_orders_from_ym2bq(
     bqjsonservicefile="polar.json",
     bqtable="orders",
     configyml="config_yandex.yml",
+    dateFrom=None,
+    dateTo=None,
 ):
     with open(configyml) as f:
         config = yaml.safe_load(f)
@@ -635,20 +639,42 @@ def export_orders_from_ym2bq(
         oath_token = lkConfig["lk"]["oath_token"]
         field_date = "statusUpdateDate"
         field_id = "ycampaignid"
+        if not lkConfig["lk"]["active"]:
+            logger.info(
+                f"Импорт из YM {campaign} {lkConfig['lk']['description']} отключен в настройках (свойство active из yml)"
+            )
+
+            continue
+
         newlist = []
-        maxdatechange = bq_method.GetMaxRecord_v1(
-            bqtable, bqdataset, bqjsonservicefile, field_date, int(campaign), field_id
-        )
         changes = True
-        if maxdatechange.year == 1:
+        if dateFrom != None:
+            changes = False
+        else:
+            maxdatechange = bq_method.GetMaxRecord_v1(
+                bqtable,
+                bqdataset,
+                bqjsonservicefile,
+                field_date,
+                int(campaign),
+                field_id,
+            )
+
+        if not changes or maxdatechange.year == 1:
             maxdatechange = datetime.date(2021, 1, 1)
             changes = (
                 False  # если таблица пустая, вначале загрузим заказы с начала года
             )
         else:
             maxdatechange = maxdatechange.date()
+        if dateFrom == None:
+            dateFrom = maxdatechange
+            dateTo = datetime.date.today()
+
         client = yandex.yclient.YMApiClient(campaign, oath_id, oath_token)
         itemsCatalog = client.get_catalog()
+        if itemsCatalog == None:
+            continue
         catalogCache = {}
         jsonCatalog = []
         for item in itemsCatalog:
@@ -659,7 +685,7 @@ def export_orders_from_ym2bq(
                     {"shopSku": offer["shopSku"], "vendorCode": offer["vendorCode"]}
                 )
 
-        itemstotal = client.get_orders(maxdatechange, datetime.date.today(), changes)
+        itemstotal = client.get_orders(dateFrom, dateTo, changes)
 
         for el in itemstotal:
             if (
@@ -692,16 +718,24 @@ def export_orders_from_ym2bq(
                             del newdict[key]
 
                     newlist.append(newdict)
-        if len(itemstotal) > 0 and maxdatechange.year != 1:
+        if len(itemstotal) > 0 and changes == False:
             filterList = []
 
             filterList.append(
                 {
                     "fieldname": field_date,
                     "operator": ">=",
-                    "value": maxdatechange.strftime("%Y-%m-%d"),
+                    "value": dateFrom.strftime("%Y-%m-%d"),
                 }
             )
+            filterList.append(
+                {
+                    "fieldname": field_date,
+                    "operator": "<=",
+                    "value": dateTo.strftime("%Y-%m-%d"),
+                }
+            )
+
             filterList.append(
                 {"fieldname": field_id, "operator": "=", "value": int(campaign)}
             )
@@ -749,6 +783,3 @@ def export_stocks_from_1c2ym(config_1c, config_ym):
                 f"Выгружены остатки в яндекс по организации {id_organisation_1c}, количество:{len(liststock)}"
             )
         continue
-
-
-

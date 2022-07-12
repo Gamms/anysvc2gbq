@@ -97,22 +97,21 @@ class WBApiClient:
                 filterfielddate, res, datefrom, self.wbid, option, dateto
             )
 
-
             for el in jsresult:
-                el['date']=el['date'][0:10]
-                el['dateClose'] = el['dateClose'][0:10]
-                el['date_accepted']= None
-                el['date_acceptance'] = None
-                el['date_warehousecheck'] = None
-                el['date_financecheck'] = None
-                if el['status']=='Принято':
-                    el['date_accepted']=el['lastChangeDate']
-                elif el['status']=='Приемка':
-                    el['date_acceptance']=el['lastChangeDate']
-                elif el['status'] == 'Проверено складом':
-                    el['date_warehousecheck'] = el['lastChangeDate']
-                elif el['status'] == 'В разработке фин отделом':
-                    el['date_financecheck'] = el['lastChangeDate']
+                el["date"] = el["date"][0:10]
+                el["dateClose"] = el["dateClose"][0:10]
+                el["date_accepted"] = None
+                el["date_acceptance"] = None
+                el["date_warehousecheck"] = None
+                el["date_financecheck"] = None
+                if el["status"] == "Принято":
+                    el["date_accepted"] = el["lastChangeDate"]
+                elif el["status"] == "Приемка":
+                    el["date_acceptance"] = el["lastChangeDate"]
+                elif el["status"] == "Проверено складом":
+                    el["date_warehousecheck"] = el["lastChangeDate"]
+                elif el["status"] == "В разработке фин отделом":
+                    el["date_financecheck"] = el["lastChangeDate"]
 
         return jsresult
 
@@ -205,7 +204,7 @@ def _make_request_v1(uri, params, timeout=60):
 
 
 def transform_res2js(filter_field_date, res, datefrom, wb_id, option, dateto):
-    if res==None:
+    if res == None:
         return []
     jsres = res.json()
     if len(jsres) == 0:
@@ -249,7 +248,7 @@ def transform_res2js(filter_field_date, res, datefrom, wb_id, option, dateto):
         "ppvz_reward",
         "retail_price_withdisc_rub",
     )
-    int_fields = ("techSize", "ts_name", "ppvz_inn")
+    int_fields = ("techSize", "ts_name", "ppvz_inn", "penalty", "additional_payment")
     str_fields = ("gNumber", "sticker")
     for el in jsresult:
         if "number" in el:

@@ -128,5 +128,5 @@ dataset:
    nds: INTEGER
    retail_commission: FLOAT
    cost_amount: INTEGER
-
-
+   penalty: INTEGER
+   additional_payment: INTEGER

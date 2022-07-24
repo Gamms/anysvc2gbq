@@ -130,7 +130,7 @@ class App(tk.Tk):
         verifydata.verify()
         pass
 
-    def add_buton_on_frame(self,frame,text,func,side,padx,pady):
+    def add_buton_on_frame(self, frame, text, func, side, padx, pady):
         b1 = ttk.Button(frame, text=text)
         b1.bind("<Button-1>", func)
         b1.pack(side=side, padx=padx, pady=pady)
@@ -147,9 +147,19 @@ class App(tk.Tk):
         frame_top1left.pack(side=LEFT)
         frame_top1right = ttk.Frame(frame_top1)
         frame_top1right.pack(side=RIGHT)
-        b1 = ttk.Button(frame_top1left, text="Yandex orders update on period")
+        b1 = ttk.Button(frame_top1left, text="Yandex orders update orders changes")
         b1.bind("<Button-1>", self.ym_update_orders)
         b1.pack(side=TOP, padx=1, pady=1)
+
+        self.add_buton_on_frame(
+            frame_top1left,
+            "Yandex orders update on period",
+            self.ym_period_orders,
+            TOP,
+            1,
+            1,
+        )
+
         b1 = ttk.Button(frame_top1left, text="Stocks 1c->YM")
         b1.bind("<Button-1>", self.ym_export_stocks)
         b1.pack(side=TOP, padx=1, pady=1)
@@ -176,13 +186,19 @@ class App(tk.Tk):
             borderwidth=2,
         )
         date_to_element.pack(side=LEFT, padx=10, pady=10)
-        # entrydict["date_from_element"] = date_from_element
-        # entrydict["date_to_element"] = date_to_element
+        entrydict = {}
+        entrydict["date_from_element"] = date_from_element
+        entrydict["date_to_element"] = date_to_element
         self.entry_dict["frame_ym"] = entrydict
 
     def ym_update_orders(self, el):
-        datefrom, dateto = self.get_date_frame("frame_wb")
+        datefrom, dateto = self.get_date_frame("frame_ym")
         transfer_method.export_orders_from_ym2bq()
+        pass
+
+    def ym_period_orders(self, el):
+        datefrom, dateto = self.get_date_frame("frame_ym")
+        transfer_method.export_orders_from_ym2bq(dateFrom=datefrom, dateTo=dateto)
         pass
 
     def ym_export_stocks(self):
@@ -202,8 +218,22 @@ class App(tk.Tk):
         frame_top1left.pack(side=LEFT)
         frame_top1right = ttk.Frame(frame_top1)
         frame_top1right.pack(side=RIGHT)
-        self.add_buton_on_frame(frame_top1left,"Ozon transaction v3",self.ozon_update_transactionv3,TOP, 1, 1)
-        self.add_buton_on_frame(frame_top1right, "Ozon orders v2 updated", self.ozon_update_transactionv3, TOP, 1, 1)
+        self.add_buton_on_frame(
+            frame_top1left,
+            "Ozon transaction v3",
+            self.ozon_update_transactionv3,
+            TOP,
+            1,
+            1,
+        )
+        self.add_buton_on_frame(
+            frame_top1right,
+            "Ozon orders v2 updated",
+            self.ozon_update_transactionv3,
+            TOP,
+            1,
+            1,
+        )
         b2 = ttk.Button(frame_top1left, text="Ozon fboorders_by_period")
         b2.bind("<Button-1>", self.ozon_update_fboorders_by_period)
         b2.pack(side=TOP, padx=1, pady=1)
@@ -320,7 +350,9 @@ class App(tk.Tk):
         b2 = ttk.Button(frame_top1left, text="Get max from wb sale")
         b2.bind("<Button-1>", self.get_max_wb_sale)
         b2.pack(side=TOP, padx=1, pady=1)
-        self.add_buton_on_frame(frame_top1right, "WB INVOICE updated", self.wb_invoice_update, TOP, 1, 1)
+        self.add_buton_on_frame(
+            frame_top1right, "WB INVOICE updated", self.wb_invoice_update, TOP, 1, 1
+        )
 
         ttk.Label(frame_top, text="Date from").pack(side=LEFT, padx=10, pady=10)
         date_from_element = DateEntry(
@@ -364,7 +396,7 @@ class App(tk.Tk):
         transfer_method.wb_export(method, bqtable, option)
         pass
 
-    def wb_invoice_update(self,bt):
+    def wb_invoice_update(self, bt):
         method = "invoice_v1"
         bqtable = "invoice"
         option = "changes"
@@ -559,7 +591,7 @@ def clean_table_if_necessary(
     wb_id,
     option,
     items,
-    idfield='odid',
+    idfield="odid",
 ):
     filterList = []
     if method in ("stocks_v1", "stocks_v2"):

@@ -130,5 +130,3 @@ dataset:
    cost_amount: INTEGER
    penalty: INTEGER
    additional_payment: INTEGER
-
-

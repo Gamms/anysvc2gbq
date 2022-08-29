@@ -130,3 +130,6 @@ dataset:
    cost_amount: INTEGER
    penalty: INTEGER
    additional_payment: INTEGER
+   srid: STRING
+   date_from: TIMESTAMP
+   date_to: TIMESTAMP

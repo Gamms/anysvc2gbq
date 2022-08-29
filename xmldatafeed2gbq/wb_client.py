@@ -207,8 +207,8 @@ def transform_res2js(filter_field_date, res, datefrom, wb_id, option, dateto):
     if res == None:
         return []
     jsres = res.json()
-    if len(jsres) == 0:
-        logger.info(f"Ошибка запроса. Статус ответа:{res.status_code}")
+    if jsres == None or len(jsres) == 0:
+        logger.info(f"Ошибка запроса или нет данных. Статус ответа:{res.status_code}")
         pass
     if filter_field_date != "":
         if option == "changes":

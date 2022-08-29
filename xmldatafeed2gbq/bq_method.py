@@ -67,7 +67,7 @@ def export_js_to_bq(js, tableid, key_path, dataset_id, loger, fields_list):
         job.result()  # Waits for table load to complete.
         logger.info(f"end uploading data.")
     except Exception as e:
-        loger.error(job.errors)
+        loger.error(f'{dataset_id} {table_id} {str(job.errors)}')
         print("Unexpected error:", e)
         raise
 

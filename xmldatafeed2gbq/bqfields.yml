@@ -33,6 +33,7 @@ dataset:
    finishedPrice: FLOAT
    lastChangeDate: TIMESTAMP
    sticker: STRING
+   srid: STRING
   stocks_v2:
    brand: STRING
    name: STRING
@@ -70,6 +71,7 @@ dataset:
     lastChangeDate: TIMESTAMP
     subject: STRING
     number: STRING
+    srid: STRING
   reportsale:
    bonus_type_name: STRING
    ppvz_office_name: STRING

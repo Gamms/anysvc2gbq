@@ -4,11 +4,10 @@ import time
 from enum import Enum
 
 import requests
+import transfer_method
 from common_type import Struct
 from dateutil import parser
 from loguru import logger
-
-import transfer_method
 
 timeout = 60  # таймаут 60 секунд
 apimethods = {
@@ -23,35 +22,37 @@ apimethods = {
 }
 
 data_filter_type = Struct
-float_fields=[
-                            "total_discount_value",
-                            "old_price",
-                            "payout",
-                            "commission_amount",
-                            "total_discount_percent",
-                            "marketplace_service_item_return_after_deliv_to_customer",
-                            "marketplace_service_item_return_part_goods_customer",
-                            "marketplace_service_item_return_not_deliv_to_customer",
-                            "marketplace_service_item_direct_flow_trans",
-                            "marketplace_service_item_dropoff_ff",
-                            "marketplace_service_item_deliv_to_customer",
-                            "marketplace_service_item_pickup",
-                            "marketplace_service_item_return_flow_trans",
-                            "marketplace_service_item_dropoff_pvz",
-                            "marketplace_service_item_dropoff_sc",
-                            "marketplace_service_item_fulfillment",
-                            "item_marketplace_service_item_return_after_deliv_to_customer",
-                            "item_marketplace_service_item_return_part_goods_customer",
-                            "item_marketplace_service_item_return_not_deliv_to_customer",
-                            "item_marketplace_service_item_direct_flow_trans",
-                            "item_marketplace_service_item_dropoff_ff",
-                            "item_marketplace_service_item_deliv_to_customer",
-                            "item_marketplace_service_item_pickup",
-                            "item_marketplace_service_item_return_flow_trans",
-                            "item_marketplace_service_item_dropoff_pvz",
-                            "item_marketplace_service_item_dropoff_sc",
-                            "item_marketplace_service_item_fulfillment"
-                        ]
+float_fields = [
+    "total_discount_value",
+    "old_price",
+    "payout",
+    "commission_amount",
+    "total_discount_percent",
+    "marketplace_service_item_return_after_deliv_to_customer",
+    "marketplace_service_item_return_part_goods_customer",
+    "marketplace_service_item_return_not_deliv_to_customer",
+    "marketplace_service_item_direct_flow_trans",
+    "marketplace_service_item_dropoff_ff",
+    "marketplace_service_item_deliv_to_customer",
+    "marketplace_service_item_pickup",
+    "marketplace_service_item_return_flow_trans",
+    "marketplace_service_item_dropoff_pvz",
+    "marketplace_service_item_dropoff_sc",
+    "marketplace_service_item_fulfillment",
+    "item_marketplace_service_item_return_after_deliv_to_customer",
+    "item_marketplace_service_item_return_part_goods_customer",
+    "item_marketplace_service_item_return_not_deliv_to_customer",
+    "item_marketplace_service_item_direct_flow_trans",
+    "item_marketplace_service_item_dropoff_ff",
+    "item_marketplace_service_item_deliv_to_customer",
+    "item_marketplace_service_item_pickup",
+    "item_marketplace_service_item_return_flow_trans",
+    "item_marketplace_service_item_dropoff_pvz",
+    "item_marketplace_service_item_dropoff_sc",
+    "item_marketplace_service_item_fulfillment",
+    "price",
+]
+
 
 class OzonDataFilterType(str, Enum):
     order_created_at = "order_created_at"  # order
@@ -131,6 +132,7 @@ def query(
         # products = {item['product_id']: item['offer_id'] for item in itemsproduct}
         newlist = []
         for el in itemstotal:
+
             if (
                 el.__contains__("financial_data") and type(el["financial_data"]) is dict
             ):  # проверим наличие финансового блока
@@ -144,19 +146,19 @@ def query(
                         newdict = newdict | postingservice
                     if not analiticsdata is None:
                         newdict = newdict | analiticsdata
-                    #эта секция только в v3 методе
-                    #for key,value in el['delivery_method'].items():
+                    # эта секция только в v3 методе
+                    # for key,value in el['delivery_method'].items():
                     #    newdict['delivery_'+key]=value
 
-                    item_services=element_product_financial['item_services']
-                    for key,value in item_services.items():
-                        newdict['item_'+key]=value
+                    item_services = element_product_financial["item_services"]
+                    for key, value in item_services.items():
+                        newdict["item_" + key] = value
 
                     if el.__contains__("barcodes") and type(el["barcodes"]) is dict:
                         newdict = newdict | el["barcodes"]
                     newdict["ozon_id"] = ozon_id
                     newdict["dateExport"] = datetime.datetime.today().isoformat()
-                    if method in ("orders","fbo_orders"):
+                    if method in ("orders", "fbo_orders"):
                         for elfield in float_fields:
                             transfer_method.checkTypeFieldFloat(newdict, elfield)
                     for product in el["products"]:
@@ -215,11 +217,10 @@ def js_2_plainjs(js, method, ozon_id):
                     newlist.append(newdict)
             else:
                 newdict = add_transaction_row(el, ozon_id, servicestr, sumservices)
-                newdict['name']=''
-                newdict['sku'] = ''
+                newdict["name"] = ""
+                newdict["sku"] = ""
                 delete_useless_field(newdict)
                 newlist.append(newdict)
-
 
     else:
         newlist = js
@@ -237,9 +238,7 @@ def add_transaction_row(el, ozon_id, servicestr, sumservices):
     newdict["services_list"] = servicestr
     newdict["services_price_total"] = sumservices
     newdict["ozon_id"] = ozon_id
-    newdict["operation_date"] = strdate_to_isodate(
-        newdict["operation_date"]
-    )
+    newdict["operation_date"] = strdate_to_isodate(newdict["operation_date"])
     newdict["order_date"] = strdate_to_isodate(newdict["order_date"])
     newdict["dateExport"] = datetime.datetime.today().isoformat()
     return newdict

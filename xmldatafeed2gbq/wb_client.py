@@ -190,6 +190,10 @@ def _make_request_v1(uri, params, timeout=60):
                 logger.info(f"Too many requests, wait 60 sec:{uri}")
                 time.sleep(timeout)
                 continue
+            elif res.status_code == 502:
+                logger.info(f"502 error, wait 60 sec:{uri}")
+                time.sleep(timeout)
+                continue
             else:
                 logger.info(f"Ошибка запроса. Статус ответа:{res.status_code}")
                 break
@@ -198,8 +202,9 @@ def _make_request_v1(uri, params, timeout=60):
             continue
         except Exception as e:
             raise e
-    logger.info(f"Ошибка запроса:{uri}")
+    logger.error(f"Ошибка запроса:{uri}")
     logger.error(f"параметры:{params}")
+
     return
 
 

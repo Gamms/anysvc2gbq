@@ -167,10 +167,31 @@ class WBApiClient:
 
     def get_reportsale_v1(self, datefrom, dateto, option, filterfielddate):
         uri = "https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod"
+        rrdid = 0
+        jsresulttotal = []
+        jsresult = self.get_result_from_query(
+            datefrom, dateto, filterfielddate, option, rrdid, uri
+        )
+
+        for count_exequte in range(100):
+            if len(jsresult) > 0:
+                jsresulttotal = jsresulttotal + jsresult
+                rrdid = jsresult[-1]["rrd_id"]
+                jsresult = self.get_result_from_query(
+                    datefrom, dateto, filterfielddate, option, rrdid, uri
+                )
+            else:
+                break
+        return jsresulttotal
+
+    def get_result_from_query(
+        self, datefrom, dateto, filterfielddate, option, rrdid, uri
+    ):
         params = [
             ("dateFrom", datefrom.isoformat()),
             ("dateto", dateto.isoformat()),
             ("key", self.apikey_v1),
+            ("rrdid", rrdid),
         ]
         res = _make_request_v1(uri, params)
         jsresult = transform_res2js(
@@ -213,8 +234,8 @@ def transform_res2js(filter_field_date, res, datefrom, wb_id, option, dateto):
         return []
     jsres = res.json()
     if jsres == None or len(jsres) == 0:
-        logger.info(f"Ошибка запроса или нет данных. Статус ответа:{res.status_code}")
-        pass
+        # logger.info(f"Ошибка запроса или нет данных. Статус ответа:{res.status_code}")
+        return []
     if filter_field_date != "":
         if option == "changes":
             jsresult = list(

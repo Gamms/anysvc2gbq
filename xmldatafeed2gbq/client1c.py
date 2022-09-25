@@ -102,6 +102,13 @@ class Client1c:
                 "ТГ"
             ),
         )
+        query.SetParameter(
+            "ТипТкани",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "статус по стратегии_OLAP"
+            ),
+        )
+
 
         choose = query.execute().choose()
         liststock = []
@@ -130,6 +137,8 @@ class Client1c:
             dict["textile_n"] = choose.textile_n
             dict["textile_group"] = choose.textile_group
             dict["item_type"] = choose.item_type
+            dict["strategy_status"] = choose.strategy_status
+
             for_vpr = ""
             if dict["form"] is not None:
                 for_vpr = dict["form"]

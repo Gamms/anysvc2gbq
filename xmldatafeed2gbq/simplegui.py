@@ -301,6 +301,11 @@ class App(tk.Tk):
         maxdatechange = bq_method.GetMaxRecord("sales", "wb", "polar.json", "", field)
         logger.debug(f"{field} :{maxdatechange}")
 
+    def get_max_wb_reportsale(self, bt):
+        field = "rr_dt"
+        maxdatechange = bq_method.GetMaxRecord("reportsale", "wb", "polar.json", "", field)
+        logger.debug(f"{field} :{maxdatechange}")
+
     def get_max_wb_orders(self, bt):
         field = "lastChangeDate"
         maxdatechange = bq_method.GetMaxRecord("orders", "wb", "polar.json", "", field)
@@ -350,6 +355,11 @@ class App(tk.Tk):
         b2 = ttk.Button(frame_top1left, text="Get max from wb sale")
         b2.bind("<Button-1>", self.get_max_wb_sale)
         b2.pack(side=TOP, padx=1, pady=1)
+
+        b2 = ttk.Button(frame_top1left, text="Get max from wb reportsale")
+        b2.bind("<Button-1>", self.get_max_wb_reportsale)
+        b2.pack(side=TOP, padx=1, pady=1)
+
         self.add_buton_on_frame(
             frame_top1right, "WB INVOICE updated", self.wb_invoice_update, TOP, 1, 1
         )
@@ -613,7 +623,7 @@ def clean_table_if_necessary(
         loger.info(f"чистим записи {method} в bq с {datefrom}:")
         bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
 
-    elif option == "byPeriod":
+    elif option == "byPeriod" and method!='reportsale':
         filterList.append(
             {
                 "fieldname": field_date,
@@ -648,6 +658,36 @@ def clean_table_if_necessary(
                 orderidlist = orderidlist + ","
             odid = elitems[idfield]
             orderidlist = orderidlist + f"'{odid}'"
+
+        filterList.append(
+            {
+                "fieldname": idfield,
+                "operator": " IN ",
+                "value": orderidlist,
+            }
+        )
+        bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
+    elif method=='reportsale':
+        logger.info(f"Чистим  данные в {tablebq} по {len(items)} отчетам")
+        fieldname = "operation_date"
+        filterList = []
+        filterList.append(
+            {
+                "fieldname": "wb_id",
+                "operator": "=",
+                "value": wb_id,
+            }
+        )
+        reportIdSet=set()
+        for elitems in items:
+            reportIdSet.add(f"'{elitems[idfield]}'")
+
+        orderidlist = ""
+        for reportid in reportIdSet:
+            if orderidlist != "":
+                orderidlist = orderidlist + ","
+                pass
+            orderidlist = orderidlist + reportid
 
         filterList.append(
             {

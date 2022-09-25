@@ -439,6 +439,7 @@ def wb_export(
                         f"Нет данных для {wb_id} метод {method} период с {datefrom} по {dateto}"
                     )
                     continue
+                idfield = "realizationreport_id"
                 datefrom = parser.parse(
                     min(orders, key=lambda x: x[field_date])[field_date]
                 ).replace(tzinfo=None)

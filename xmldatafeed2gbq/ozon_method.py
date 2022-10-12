@@ -141,11 +141,11 @@ def query(
                 ]:  # пробежимся по тч товаров из финансового блока
                     postingservice = el["financial_data"]["posting_services"]
                     analiticsdata = el["analytics_data"]
-                    newdict = el | element_product_financial | postingservice
+                    newdict = el | element_product_financial
                     if not postingservice is None:
-                        newdict = newdict | postingservice
+                        newdict.update(postingservice)
                     if not analiticsdata is None:
-                        newdict = newdict | analiticsdata
+                        newdict.update(analiticsdata)
                     # эта секция только в v3 методе
                     # for key,value in el['delivery_method'].items():
                     #    newdict['delivery_'+key]=value
@@ -155,7 +155,7 @@ def query(
                         newdict["item_" + key] = value
 
                     if el.__contains__("barcodes") and type(el["barcodes"]) is dict:
-                        newdict = newdict | el["barcodes"]
+                        newdict.update(el["barcodes"])
                     newdict["ozon_id"] = ozon_id
                     newdict["dateExport"] = datetime.datetime.today().isoformat()
                     if method in ("orders", "fbo_orders"):

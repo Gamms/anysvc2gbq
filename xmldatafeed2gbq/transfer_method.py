@@ -1,5 +1,7 @@
 import datetime
 
+from dateutil.relativedelta import relativedelta
+
 import bq_method
 import ozon_method
 import wb_client
@@ -9,7 +11,6 @@ from client1c import Client1c, daterange
 from dateutil import parser
 from loguru import logger
 from ozon_client import OZONApiClient
-from simplegui import clean_table_if_necessary, fill_date
 
 
 def export_orders_from_ozon2bq_updated_in_the_period(
@@ -784,3 +785,143 @@ def export_stocks_from_1c2ym(config_1c, config_ym):
                 f"Выгружены остатки в яндекс по организации {id_organisation_1c}, количество:{len(liststock)}"
             )
         continue
+
+
+def fill_date(
+    option,
+    tablebq,
+    datasetid,
+    jsonkey,
+    wb_id,
+    field_date,
+    method,
+    datefromstr="",
+    datetostr="",
+):
+    if datetostr == "":
+        dateto = datetime.datetime.today()
+    else:
+        dateto = parser.parse(datetostr)
+
+    if datefromstr == "":
+        datefrom = dateto - relativedelta(months=1)
+    else:
+        datefrom = parser.parse(datefromstr)
+    if option == "changes":
+        maxdatechange = bq_method.GetMaxRecord(
+            tablebq, datasetid, jsonkey, wb_id, field_date
+        )
+        if maxdatechange.replace(tzinfo=None) > datefrom:
+            datefrom = maxdatechange.replace(tzinfo=None)
+
+    return datefrom, dateto
+
+
+def clean_table_if_necessary(
+    datasetid,
+    datefrom,
+    dateto,
+    field_date,
+    jsonkey,
+    loger,
+    method,
+    tablebq,
+    wb_id,
+    option,
+    items,
+    idfield="odid",
+):
+    filterList = []
+    if method in ("stocks_v1", "stocks_v2"):
+        filterList.append({"fieldname": "wb_id", "operator": "=", "value": wb_id})
+        filterList.append(
+            {
+                "fieldname": field_date,
+                "operator": ">=",
+                "value": datefrom.strftime("%Y-%m-%d"),
+            }
+        )
+        filterList.append(
+            {
+                "fieldname": field_date,
+                "operator": "<=",
+                "value": dateto.strftime("%Y-%m-%d"),
+            }
+        )
+        loger.info(f"чистим записи {method} в bq с {datefrom}:")
+        bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
+
+    elif option == "byPeriod" and method!='reportsale':
+        filterList.append(
+            {
+                "fieldname": field_date,
+                "operator": ">=",
+                "value": datefrom.strftime("%Y-%m-%d"),
+            }
+        )
+        filterList.append(
+            {
+                "fieldname": field_date,
+                "operator": "<=",
+                "value": dateto.strftime("%Y-%m-%d"),
+            }
+        )
+        filterList.append({"fieldname": "wb_id", "operator": "=", "value": wb_id})
+        loger.info(f"чистим записи {method} в bq с {datefrom}:")
+        bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
+    elif option == "changes":
+        logger.info(f"Чистим  данные в {tablebq} по {len(items)} заказам")
+        fieldname = "operation_date"
+        filterList = []
+        filterList.append(
+            {
+                "fieldname": "wb_id",
+                "operator": "=",
+                "value": wb_id,
+            }
+        )
+        orderidlist = ""
+        for elitems in items:
+            if orderidlist != "":
+                orderidlist = orderidlist + ","
+            odid = elitems[idfield]
+            orderidlist = orderidlist + f"'{odid}'"
+
+        filterList.append(
+            {
+                "fieldname": idfield,
+                "operator": " IN ",
+                "value": orderidlist,
+            }
+        )
+        bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
+    elif method=='reportsale':
+        logger.info(f"Чистим  данные в {tablebq} по {len(items)} отчетам")
+        fieldname = "operation_date"
+        filterList = []
+        filterList.append(
+            {
+                "fieldname": "wb_id",
+                "operator": "=",
+                "value": wb_id,
+            }
+        )
+        reportIdSet=set()
+        for elitems in items:
+            reportIdSet.add(f"'{elitems[idfield]}'")
+
+        orderidlist = ""
+        for reportid in reportIdSet:
+            if orderidlist != "":
+                orderidlist = orderidlist + ","
+                pass
+            orderidlist = orderidlist + reportid
+
+        filterList.append(
+            {
+                "fieldname": idfield,
+                "operator": " IN ",
+                "value": orderidlist,
+            }
+        )
+        bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)

@@ -4,7 +4,7 @@ import time
 from enum import Enum
 
 import requests
-import transfer_method
+from transfer_method import checkTypeFieldFloat
 from common_type import Struct
 from dateutil import parser
 from loguru import logger
@@ -160,7 +160,7 @@ def query(
                     newdict["dateExport"] = datetime.datetime.today().isoformat()
                     if method in ("orders", "fbo_orders"):
                         for elfield in float_fields:
-                            transfer_method.checkTypeFieldFloat(newdict, elfield)
+                            checkTypeFieldFloat(newdict, elfield)
                     for product in el["products"]:
                         if product["sku"] == newdict["product_id"]:
                             newdict["offer_id"] = product["offer_id"]
@@ -185,7 +185,7 @@ def query(
         for el in itemstotal:
 
             for elfield in ["order_amount", "commission_amount"]:
-                transfer_method.checkTypeFieldFloat(el, elfield)
+                checkTypeFieldFloat(el, elfield)
             el["ozon_id"] = ozon_id
             el["dateExport"] = datetime.datetime.today().isoformat()
             if method == "price":
@@ -202,19 +202,51 @@ def query(
 def js_2_plainjs(js, method, ozon_id):
     if method == "transactionv3":
         newlist = []
+        comission_field_list=['MarketplaceDeliveryCostItem',
+'MarketplaceServiceItemDirectFlowTrans',
+'MarketplaceServiceItemDelivToCustomer',
+'MarketplaceServiceItemReturnFlowTrans',
+'MarketplaceNotDeliveredCostItem',
+'MarketplaceReturnAfterDeliveryCostItem',
+'ItemAdvertisementForSupplierLogistic',
+'ItemAdvertisementForSupplierLogisticSeller',
+'MarketplaceServiceItemPickup',
+'MarketplaceServiceStorageItem',
+'MarketplaceServiceItemMarkingItems',
+'MarketplaceServiceItemReturnFromStock',
+'MarketplaceServiceItemDropoffFF',
+'MarketplaceServiceItemDropoffPVZ',
+'MarketplaceServiceItemDropoffSC',
+'MarketplaceServiceItemFulfillment',
+'MarketplaceServiceItemReturnAfterDelivToCustomer',
+'MarketplaceServiceItemReturnNotDelivToCustomer',
+'MarketplaceServiceItemReturnPartGoodsCustomer',
+'MarketplaceMarketingActionCostItem',
+'MarketplaceServiceItemInstallment',
+'MarketplaceSaleReviewsItem',
+'MarketplaceServiceItemFlexiblePaymentSchedule',]
         for el in js:
             sumservices = 0
             servicestr = ""
             for service in el["services"]:
-                servicestr = f'{servicestr}{service["name"]}:{service["price"]}'
+                servicestr = f'{servicestr}{service["name"]}:{service["price"]},'
+                if service["name"] in comission_field_list:
+                    el[service["name"]]=service["price"]
                 sumservices = sumservices + service["price"]
 
             if len(el["items"]):
+                count_row=0
                 for item in el["items"]:
+                    count_row =+1
                     newdict = add_transaction_row(el, ozon_id, servicestr, sumservices)
                     newdict = newdict | item
                     delete_useless_field(newdict)
+                    if count_row > 1:#если в заказе несколько строк тогда нужно обнулить комиссии у следующих строк чтоб избежать дублирования для корректного сложения в OLAP, так как комиссии вешаются на заказ
+                        newdict['sale_commission']=0.0
+                        for field_com in comission_field_list:
+                            newdict[field_com]=0.0
                     newlist.append(newdict)
+
             else:
                 newdict = add_transaction_row(el, ozon_id, servicestr, sumservices)
                 newdict["name"] = ""
@@ -388,6 +420,31 @@ def fields_from_method(method):
         csvfields.append({"services_price_total": "FLOAT"})
         csvfields.append({"ozon_id": "STRING"})
         csvfields.append({"dateExport": "TIMESTAMP"})
+        csvfields.append({'MarketplaceDeliveryCostItem':'FLOAT'})
+        csvfields.append({'MarketplaceServiceItemDirectFlowTrans':'FLOAT'})
+        csvfields.append({'MarketplaceServiceItemDelivToCustomer':'FLOAT'})
+        csvfields.append({'MarketplaceServiceItemReturnFlowTrans':'FLOAT'})
+        csvfields.append({'MarketplaceNotDeliveredCostItem':'FLOAT'})
+        csvfields.append({'MarketplaceReturnAfterDeliveryCostItem':'FLOAT'})
+        csvfields.append({'ItemAdvertisementForSupplierLogistic':'FLOAT'})
+        csvfields.append({'ItemAdvertisementForSupplierLogisticSeller':'FLOAT'})
+        csvfields.append({'MarketplaceServiceItemPickup':'FLOAT'})
+        csvfields.append({'MarketplaceServiceStorageItem':'FLOAT'})
+        csvfields.append({'MarketplaceServiceItemMarkingItems':'FLOAT'})
+        csvfields.append({'MarketplaceServiceItemReturnFromStock':'FLOAT'})
+        csvfields.append({'MarketplaceServiceItemDropoffFF':'FLOAT'})
+        csvfields.append({'MarketplaceServiceItemDropoffPVZ':'FLOAT'})
+        csvfields.append({'MarketplaceServiceItemDropoffSC':'FLOAT'})
+        csvfields.append({'MarketplaceServiceItemFulfillment':'FLOAT'})
+        csvfields.append({'MarketplaceServiceItemReturnAfterDelivToCustomer':'FLOAT'})
+        csvfields.append({'MarketplaceServiceItemReturnNotDelivToCustomer':'FLOAT'})
+        csvfields.append({'MarketplaceServiceItemReturnPartGoodsCustomer':'FLOAT'})
+        csvfields.append({'MarketplaceMarketingActionCostItem':'FLOAT'})
+        csvfields.append({'MarketplaceServiceItemInstallment':'FLOAT'})
+        csvfields.append({'MarketplaceSaleReviewsItem':'FLOAT'})
+        csvfields.append({'MarketplaceServiceItemFlexiblePaymentSchedule':'FLOAT'})
+
+
     elif method == "___orders" or method == "___fbo_orders":
         csvfields = []
         csvfields.append({"payment_type_group_name": "STRING"})

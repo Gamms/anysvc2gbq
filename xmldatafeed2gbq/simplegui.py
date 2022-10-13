@@ -1,4 +1,3 @@
-import datetime
 import logging
 import queue
 import tkinter as tk
@@ -11,11 +10,6 @@ import method_telegram
 import ozon_method
 import transfer_method
 import verifydata
-import wb_client
-import yaml
-from client1c import daterange
-from dateutil import parser
-from dateutil.relativedelta import relativedelta
 from loguru import logger
 from tkcalendar import DateEntry
 
@@ -587,146 +581,6 @@ class App(tk.Tk):
         textresult = transfer_method.export_stocks_from_ozon2bq(
             bqdataset, bqjsonservicefile, bqtable, configyml
         )
-
-
-def clean_table_if_necessary(
-    datasetid,
-    datefrom,
-    dateto,
-    field_date,
-    jsonkey,
-    loger,
-    method,
-    tablebq,
-    wb_id,
-    option,
-    items,
-    idfield="odid",
-):
-    filterList = []
-    if method in ("stocks_v1", "stocks_v2"):
-        filterList.append({"fieldname": "wb_id", "operator": "=", "value": wb_id})
-        filterList.append(
-            {
-                "fieldname": field_date,
-                "operator": ">=",
-                "value": datefrom.strftime("%Y-%m-%d"),
-            }
-        )
-        filterList.append(
-            {
-                "fieldname": field_date,
-                "operator": "<=",
-                "value": dateto.strftime("%Y-%m-%d"),
-            }
-        )
-        loger.info(f"чистим записи {method} в bq с {datefrom}:")
-        bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
-
-    elif option == "byPeriod" and method!='reportsale':
-        filterList.append(
-            {
-                "fieldname": field_date,
-                "operator": ">=",
-                "value": datefrom.strftime("%Y-%m-%d"),
-            }
-        )
-        filterList.append(
-            {
-                "fieldname": field_date,
-                "operator": "<=",
-                "value": dateto.strftime("%Y-%m-%d"),
-            }
-        )
-        filterList.append({"fieldname": "wb_id", "operator": "=", "value": wb_id})
-        loger.info(f"чистим записи {method} в bq с {datefrom}:")
-        bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
-    elif option == "changes":
-        logger.info(f"Чистим  данные в {tablebq} по {len(items)} заказам")
-        fieldname = "operation_date"
-        filterList = []
-        filterList.append(
-            {
-                "fieldname": "wb_id",
-                "operator": "=",
-                "value": wb_id,
-            }
-        )
-        orderidlist = ""
-        for elitems in items:
-            if orderidlist != "":
-                orderidlist = orderidlist + ","
-            odid = elitems[idfield]
-            orderidlist = orderidlist + f"'{odid}'"
-
-        filterList.append(
-            {
-                "fieldname": idfield,
-                "operator": " IN ",
-                "value": orderidlist,
-            }
-        )
-        bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
-    elif method=='reportsale':
-        logger.info(f"Чистим  данные в {tablebq} по {len(items)} отчетам")
-        fieldname = "operation_date"
-        filterList = []
-        filterList.append(
-            {
-                "fieldname": "wb_id",
-                "operator": "=",
-                "value": wb_id,
-            }
-        )
-        reportIdSet=set()
-        for elitems in items:
-            reportIdSet.add(f"'{elitems[idfield]}'")
-
-        orderidlist = ""
-        for reportid in reportIdSet:
-            if orderidlist != "":
-                orderidlist = orderidlist + ","
-                pass
-            orderidlist = orderidlist + reportid
-
-        filterList.append(
-            {
-                "fieldname": idfield,
-                "operator": " IN ",
-                "value": orderidlist,
-            }
-        )
-        bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
-
-
-def fill_date(
-    option,
-    tablebq,
-    datasetid,
-    jsonkey,
-    wb_id,
-    field_date,
-    method,
-    datefromstr="",
-    datetostr="",
-):
-    if datetostr == "":
-        dateto = datetime.datetime.today()
-    else:
-        dateto = parser.parse(datetostr)
-
-    if datefromstr == "":
-        datefrom = dateto - relativedelta(months=1)
-    else:
-        datefrom = parser.parse(datefromstr)
-    if option == "changes":
-        maxdatechange = bq_method.GetMaxRecord(
-            tablebq, datasetid, jsonkey, wb_id, field_date
-        )
-        if maxdatechange.replace(tzinfo=None) > datefrom:
-            datefrom = maxdatechange.replace(tzinfo=None)
-
-    return datefrom, dateto
 
 
 if __name__ == "__main__":

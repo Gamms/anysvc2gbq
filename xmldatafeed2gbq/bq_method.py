@@ -288,3 +288,5 @@ def TruncateTable(table_id, dataset_id, key_path):
     except Exception as e:
         print(e)
     return results
+
+

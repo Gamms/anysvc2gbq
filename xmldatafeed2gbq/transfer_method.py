@@ -693,9 +693,10 @@ def export_orders_from_ym2bq(
                 el.__contains__("items") and type(el["items"]) is list
             ):  # проверим наличие финансового блока
                 sumCommision = 0
+                dictComission = {}
                 for commEl in el["commissions"]:
                     sumCommision = sumCommision + commEl["predicted"]
-
+                    dictComission[commEl["type"]] = commEl["predicted"]
                 for item in el[
                     "items"
                 ]:  # пробежимся по тч из заказа и объединим их в строку
@@ -714,6 +715,8 @@ def export_orders_from_ym2bq(
                     newdict["dateExport"] = datetime.datetime.today().isoformat()
                     newdict["sumCommision"] = sumCommision
                     newdict["articleCustomer"] = catalogCache.get(newdict["shopSku"])
+                    newdict.update(dictComission)
+                    dictComission = {}
                     for key, value in list(newdict.items()):  # удалим ненужные элементы
                         if type(value) is list or type(value) is dict:
                             del newdict[key]

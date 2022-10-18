@@ -4,10 +4,10 @@ import time
 from enum import Enum
 
 import requests
-from transfer_method import checkTypeFieldFloat
 from common_type import Struct
 from dateutil import parser
 from loguru import logger
+from transfer_method import checkTypeFieldFloat
 
 timeout = 60  # таймаут 60 секунд
 apimethods = {
@@ -113,7 +113,8 @@ def query(
     # фильтруем то что уже есть
     items = datablock_from_js(js, method)
     itemstotal = items
-    while len(items) == querycount:
+
+    while check_len_result(js, method, page, querycount):
         # количество записей видимо больше запросим следующую страниц
         page = page + 1  #
         data, querycount = makedata(
@@ -199,52 +200,72 @@ def query(
     return itemstotal
 
 
+def check_len_result(js, method, page, querycount):
+    if method == "transactionv3":
+        result = page < js["result"]["page_count"]
+    elif method == "ordersv3":
+        result = js["result"]["has_next"]
+    else:
+        result = len(js["result"]) == querycount
+    return result
+
+
 def js_2_plainjs(js, method, ozon_id):
     if method == "transactionv3":
         newlist = []
-        comission_field_list=['MarketplaceDeliveryCostItem',
-'MarketplaceServiceItemDirectFlowTrans',
-'MarketplaceServiceItemDelivToCustomer',
-'MarketplaceServiceItemReturnFlowTrans',
-'MarketplaceNotDeliveredCostItem',
-'MarketplaceReturnAfterDeliveryCostItem',
-'ItemAdvertisementForSupplierLogistic',
-'ItemAdvertisementForSupplierLogisticSeller',
-'MarketplaceServiceItemPickup',
-'MarketplaceServiceStorageItem',
-'MarketplaceServiceItemMarkingItems',
-'MarketplaceServiceItemReturnFromStock',
-'MarketplaceServiceItemDropoffFF',
-'MarketplaceServiceItemDropoffPVZ',
-'MarketplaceServiceItemDropoffSC',
-'MarketplaceServiceItemFulfillment',
-'MarketplaceServiceItemReturnAfterDelivToCustomer',
-'MarketplaceServiceItemReturnNotDelivToCustomer',
-'MarketplaceServiceItemReturnPartGoodsCustomer',
-'MarketplaceMarketingActionCostItem',
-'MarketplaceServiceItemInstallment',
-'MarketplaceSaleReviewsItem',
-'MarketplaceServiceItemFlexiblePaymentSchedule',]
+        comission_field_list = [
+            "MarketplaceDeliveryCostItem",
+            "MarketplaceServiceItemDirectFlowTrans",
+            "MarketplaceServiceItemDelivToCustomer",
+            "MarketplaceServiceItemReturnFlowTrans",
+            "MarketplaceNotDeliveredCostItem",
+            "MarketplaceReturnAfterDeliveryCostItem",
+            "ItemAdvertisementForSupplierLogistic",
+            "ItemAdvertisementForSupplierLogisticSeller",
+            "MarketplaceServiceItemPickup",
+            "MarketplaceServiceStorageItem",
+            "MarketplaceServiceItemMarkingItems",
+            "MarketplaceServiceItemReturnFromStock",
+            "MarketplaceServiceItemDropoffFF",
+            "MarketplaceServiceItemDropoffPVZ",
+            "MarketplaceServiceItemDropoffSC",
+            "MarketplaceServiceItemFulfillment",
+            "MarketplaceServiceItemReturnAfterDelivToCustomer",
+            "MarketplaceServiceItemReturnNotDelivToCustomer",
+            "MarketplaceServiceItemReturnPartGoodsCustomer",
+            "MarketplaceMarketingActionCostItem",
+            "MarketplaceServiceItemInstallment",
+            "MarketplaceSaleReviewsItem",
+            "MarketplaceServiceItemFlexiblePaymentSchedule",
+            "MarketplaceServicePremiumPromotion",
+            "MarketplaceReturnStorageServiceAtThePickupPointFbsItem",
+            "MarketplaceServicePremiumCashbackIndividualPoints",
+            "MarketplaceServiceDCFlowTrans",
+            "MarketplaceRedistributionOfAcquiringOperation",
+            "MarketplaceServiceItemDirectFlowLogistic",
+        ]
         for el in js:
             sumservices = 0
             servicestr = ""
             for service in el["services"]:
                 servicestr = f'{servicestr}{service["name"]}:{service["price"]},'
                 if service["name"] in comission_field_list:
-                    el[service["name"]]=service["price"]
+                    el[service["name"]] = service["price"]
                 sumservices = sumservices + service["price"]
 
             if len(el["items"]):
-                count_row=0
+                count_row = 0
                 for item in el["items"]:
-                    count_row =+1
+                    count_row = +1
                     newdict = add_transaction_row(el, ozon_id, servicestr, sumservices)
                     newdict = newdict | item
                     delete_useless_field(newdict)
-                    if count_row > 1:#если в заказе несколько строк тогда нужно обнулить комиссии у следующих строк чтоб избежать дублирования для корректного сложения в OLAP, так как комиссии вешаются на заказ
-                        newdict['sale_commission']=0.0
+                    if (
+                        count_row > 1
+                    ):  # если в заказе несколько строк тогда нужно обнулить комиссии у следующих строк чтоб избежать дублирования для корректного сложения в OLAP, так как комиссии вешаются на заказ
+                        newdict["sale_commission"] = 0.0
                         for field_com in comission_field_list:
-                            newdict[field_com]=0.0
+                            newdict[field_com] = 0.0
                     newlist.append(newdict)
 
             else:
@@ -420,30 +441,37 @@ def fields_from_method(method):
         csvfields.append({"services_price_total": "FLOAT"})
         csvfields.append({"ozon_id": "STRING"})
         csvfields.append({"dateExport": "TIMESTAMP"})
-        csvfields.append({'MarketplaceDeliveryCostItem':'FLOAT'})
-        csvfields.append({'MarketplaceServiceItemDirectFlowTrans':'FLOAT'})
-        csvfields.append({'MarketplaceServiceItemDelivToCustomer':'FLOAT'})
-        csvfields.append({'MarketplaceServiceItemReturnFlowTrans':'FLOAT'})
-        csvfields.append({'MarketplaceNotDeliveredCostItem':'FLOAT'})
-        csvfields.append({'MarketplaceReturnAfterDeliveryCostItem':'FLOAT'})
-        csvfields.append({'ItemAdvertisementForSupplierLogistic':'FLOAT'})
-        csvfields.append({'ItemAdvertisementForSupplierLogisticSeller':'FLOAT'})
-        csvfields.append({'MarketplaceServiceItemPickup':'FLOAT'})
-        csvfields.append({'MarketplaceServiceStorageItem':'FLOAT'})
-        csvfields.append({'MarketplaceServiceItemMarkingItems':'FLOAT'})
-        csvfields.append({'MarketplaceServiceItemReturnFromStock':'FLOAT'})
-        csvfields.append({'MarketplaceServiceItemDropoffFF':'FLOAT'})
-        csvfields.append({'MarketplaceServiceItemDropoffPVZ':'FLOAT'})
-        csvfields.append({'MarketplaceServiceItemDropoffSC':'FLOAT'})
-        csvfields.append({'MarketplaceServiceItemFulfillment':'FLOAT'})
-        csvfields.append({'MarketplaceServiceItemReturnAfterDelivToCustomer':'FLOAT'})
-        csvfields.append({'MarketplaceServiceItemReturnNotDelivToCustomer':'FLOAT'})
-        csvfields.append({'MarketplaceServiceItemReturnPartGoodsCustomer':'FLOAT'})
-        csvfields.append({'MarketplaceMarketingActionCostItem':'FLOAT'})
-        csvfields.append({'MarketplaceServiceItemInstallment':'FLOAT'})
-        csvfields.append({'MarketplaceSaleReviewsItem':'FLOAT'})
-        csvfields.append({'MarketplaceServiceItemFlexiblePaymentSchedule':'FLOAT'})
-
+        csvfields.append({"MarketplaceDeliveryCostItem": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemDirectFlowTrans": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemDelivToCustomer": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemReturnFlowTrans": "FLOAT"})
+        csvfields.append({"MarketplaceNotDeliveredCostItem": "FLOAT"})
+        csvfields.append({"MarketplaceReturnAfterDeliveryCostItem": "FLOAT"})
+        csvfields.append({"ItemAdvertisementForSupplierLogistic": "FLOAT"})
+        csvfields.append({"ItemAdvertisementForSupplierLogisticSeller": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemPickup": "FLOAT"})
+        csvfields.append({"MarketplaceServiceStorageItem": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemMarkingItems": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemReturnFromStock": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemDropoffFF": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemDropoffPVZ": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemDropoffSC": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemFulfillment": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemReturnAfterDelivToCustomer": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemReturnNotDelivToCustomer": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemReturnPartGoodsCustomer": "FLOAT"})
+        csvfields.append({"MarketplaceMarketingActionCostItem": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemInstallment": "FLOAT"})
+        csvfields.append({"MarketplaceSaleReviewsItem": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemFlexiblePaymentSchedule": "FLOAT"})
+        csvfields.append({"MarketplaceServicePremiumPromotion": "FLOAT"})
+        csvfields.append(
+            {"MarketplaceReturnStorageServiceAtThePickupPointFbsItem": "FLOAT"}
+        )
+        csvfields.append({"MarketplaceServicePremiumCashbackIndividualPoints": "FLOAT"})
+        csvfields.append({"MarketplaceServiceDCFlowTrans": "FLOAT"})
+        csvfields.append({"MarketplaceRedistributionOfAcquiringOperation": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemDirectFlowLogistic": "FLOAT"})
 
     elif method == "___orders" or method == "___fbo_orders":
         csvfields = []

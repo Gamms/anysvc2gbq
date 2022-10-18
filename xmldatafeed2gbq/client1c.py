@@ -109,7 +109,6 @@ class Client1c:
             ),
         )
 
-
         choose = query.execute().choose()
         liststock = []
         while choose.next():
@@ -217,7 +216,7 @@ class Client1c:
             liststock.append(dict)
         return liststock
 
-    def get_order_history_status(self)->list:
+    def get_order_history_status(self) -> list:
         if self.connection == None:
             raise "Нет подключения к базе 1С"
         textquery = get_query_order_history_status()
@@ -227,15 +226,62 @@ class Client1c:
         resultlist = []
         while choose.next():
             dict = {}
-            dict['status_date']=choose.status_date.isoformat()
-            dict['status_name'] = choose.status_name
-            dict['order_date'] = choose.order_date.date().isoformat()
-            dict['order_number'] = choose.order_number
-            dict['updated_by'] = choose.updated_by
+            dict["status_date"] = choose.status_date.isoformat()
+            dict["status_name"] = choose.status_name
+            dict["order_date"] = choose.order_date.date().isoformat()
+            dict["order_number"] = choose.order_number
+            dict["updated_by"] = choose.updated_by
             resultlist.append(dict)
         return resultlist
 
+    def get_documents_of_service_receipt(self, dateStart, dateEnd) -> list:
+        if self.connection == None:
+            raise "Нет подключения к базе 1С"
+        textquery = get_query_documents_of_service_receipt()
+        query = self.connection.NewObject("Query", textquery)
+        query.SetParameter(
+            "НачалоПериода",
+            self.connection.newObject(
+                "Граница",
+                self.connection.ValueFromStringInternal(
+                    f'{{"D",{dateStart.replace(hour=23, minute=59, second=59, microsecond=0).strftime("%Y%m%d%H%M%S")}}}'
+                ),
+                self.connection.ВидГраницы.Включая,
+            ),
+        )
+        query.SetParameter(
+            "КонецПериода",
+            self.connection.newObject(
+                "Граница",
+                self.connection.ValueFromStringInternal(
+                    f'{{"D",{dateEnd.replace(hour=23, minute=59, second=59, microsecond=0).strftime("%Y%m%d%H%M%S")}}}'
+                ),
+                self.connection.ВидГраницы.Включая,
+            ),
+        )
 
+        choose = query.execute().choose()
+        resultlist = []
+
+        while choose.next():
+            dict = {}
+            dict["Amount"] = choose.Amount
+            dict["Code_nom"] = choose.Code_nom
+            dict["Customer"] = choose.Customer
+            dict["Customer_cod"] = choose.Customer_cod
+            dict["date_doc"] = choose.date_doc.isoformat()
+            dict["date_incoming"] = choose.date_incoming.isoformat()
+            dict["Department"] = choose.Department
+            dict["Description_nom"] = choose.Description_nom
+            dict["Doc_type"] = choose.Doc_type
+            dict["number_doc"] = choose.number_doc
+            dict["number_incoming"] = choose.number_incoming
+            dict["Org"] = choose.Org
+            dict["Quantity"] = choose.Quantity
+            dict["Сost_item"] = choose.Сost_item
+            dict["Сost_item_cod"] = choose.Сost_item_cod
+            resultlist.append(dict)
+        return resultlist
 
 
 def upload_from_1c(
@@ -289,110 +335,51 @@ def upload_from_1c(
             ),
         )
 
-        def upload_from_1c(
-            config,
-            bqjsonservicefile,
-            bqdataset,
-            bqtable,
-            datestock_start,
-            datestock_end,
-        ):
-            global query, choose
-            struct_config = Struct(**config)
-            CONSTR = f'Srvr="{struct_config.server}";Ref="{struct_config.infobase}";Usr="{struct_config.user}";Pwd="{struct_config.password}"'
+        choose = query.execute().choose()
 
-            v83 = win32com.client.Dispatch("V83.COMConnector").Connect(CONSTR)
-            q = get_query_fullstock()
-            query = v83.NewObject("Query", q)
-            filterList = []
-            filterList.append(
-                {
-                    "fieldname": "datestock",
-                    "operator": ">=",
-                    "value": datestock_start.strftime("%Y-%m-%d"),
-                }
-            )
-            filterList.append(
-                {
-                    "fieldname": "datestock",
-                    "operator": "<=",
-                    "value": datestock_end.strftime("%Y-%m-%d"),
-                }
-            )
-            bq_method.DeleteRowFromTable(
-                bqtable, bqdataset, bqjsonservicefile, filterList
-            )
+        liststock = []
+        while choose.next():
+            dict = {}
+            dict["item"] = choose.item
+            dict["articul"] = choose.articul
+            dict["scl"] = choose.scl
+            dict["item_group"] = choose.item_group
+            dict["item_group_cost"] = choose.item_group_cost
+            dict["item_type"] = choose.item_type
+            dict["stock_start"] = choose.stock_start
+            dict["stock_in"] = choose.stock_in
+            dict["stock_out"] = choose.stock_out
+            dict["stock_end"] = choose.stock_end
+            dict["reserv"] = choose.reserv
+            dict["delivering"] = choose.delivering
+            dict["free_qty"] = choose.free_qty
+            dict["ordered"] = choose.ordered
+            dict["datestock"] = datestock.date().isoformat()
+            dict["dateexport"] = datetime.date.today().isoformat()
+            liststock.append(dict)
+        csvfields = []
+        csvfields.append({"item": "STRING"})
+        csvfields.append({"articul": "STRING"})
+        csvfields.append({"scl": "STRING"})
+        csvfields.append({"item_group": "STRING"})
+        csvfields.append({"item_group_cost": "STRING"})
+        csvfields.append({"item_type": "STRING"})
+        csvfields.append({"stock_start": "FLOAT"})
+        csvfields.append({"stock_in": "FLOAT"})
+        csvfields.append({"stock_out": "FLOAT"})
+        csvfields.append({"stock_end": "FLOAT"})
+        csvfields.append({"reserv": "FLOAT"})
+        csvfields.append({"delivering": "FLOAT"})
+        csvfields.append({"ordered": "FLOAT"})
+        csvfields.append({"free_qty": "FLOAT"})
+        csvfields.append({"datestock": "DATE"})
+        csvfields.append({"dateexport": "DATE"})
+        with open("personal.json", "w") as json_file:
+            json.dump(liststock, json_file)
 
-            for datestock in daterange(datestock_start, datestock_end):
-                logger.info(
-                    f"Получение остатков из 1С {datestock.strftime('%d-%m-%Y')}."
-                )
-                query.SetParameter(
-                    "ДатаОстатковНачало",
-                    v83.newObject(
-                        "Граница",
-                        v83.ValueFromStringInternal(
-                            f'{{"D",{datestock.replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y%m%d%H%M%S")}}}'
-                        ),
-                        v83.ВидГраницы.Включая,
-                    ),
-                )
-                query.SetParameter(
-                    "ДатаОстатков",
-                    v83.newObject(
-                        "Граница",
-                        v83.ValueFromStringInternal(
-                            f'{{"D",{datestock.replace(hour=23, minute=59, second=59, microsecond=0).strftime("%Y%m%d%H%M%S")}}}'
-                        ),
-                        v83.ВидГраницы.Включая,
-                    ),
-                )
-
-                choose = query.execute().choose()
-
-                liststock = []
-                while choose.next():
-                    dict = {}
-                    dict["item"] = choose.item
-                    dict["articul"] = choose.articul
-                    dict["scl"] = choose.scl
-                    dict["item_group"] = choose.item_group
-                    dict["item_group_cost"] = choose.item_group_cost
-                    dict["item_type"] = choose.item_type
-                    dict["stock_start"] = choose.stock_start
-                    dict["stock_in"] = choose.stock_in
-                    dict["stock_out"] = choose.stock_out
-                    dict["stock_end"] = choose.stock_end
-                    dict["reserv"] = choose.reserv
-                    dict["delivering"] = choose.delivering
-                    dict["free_qty"] = choose.free_qty
-                    dict["ordered"] = choose.ordered
-                    dict["datestock"] = datestock.date().isoformat()
-                    dict["dateexport"] = datetime.date.today().isoformat()
-                    liststock.append(dict)
-                csvfields = []
-                csvfields.append({"item": "STRING"})
-                csvfields.append({"articul": "STRING"})
-                csvfields.append({"scl": "STRING"})
-                csvfields.append({"item_group": "STRING"})
-                csvfields.append({"item_group_cost": "STRING"})
-                csvfields.append({"item_type": "STRING"})
-                csvfields.append({"stock_start": "FLOAT"})
-                csvfields.append({"stock_in": "FLOAT"})
-                csvfields.append({"stock_out": "FLOAT"})
-                csvfields.append({"stock_end": "FLOAT"})
-                csvfields.append({"reserv": "FLOAT"})
-                csvfields.append({"delivering": "FLOAT"})
-                csvfields.append({"ordered": "FLOAT"})
-                csvfields.append({"free_qty": "FLOAT"})
-                csvfields.append({"datestock": "DATE"})
-                csvfields.append({"dateexport": "DATE"})
-                with open("personal.json", "w") as json_file:
-                    json.dump(liststock, json_file)
-
-                bq_method.export_js_to_bq(
-                    liststock, bqtable, bqjsonservicefile, bqdataset, logger, csvfields
-                )
+        bq_method.export_js_to_bq(
+            liststock, bqtable, bqjsonservicefile, bqdataset, logger, csvfields
+        )
 
 
 def export_item_to_bq(fileconfi1c, bqjsonservicefile, bqdataset, bqtable):
@@ -411,8 +398,8 @@ def export_item_to_bq(fileconfi1c, bqjsonservicefile, bqdataset, bqtable):
     csvfields = []
     for key in liststock[0].keys():
         csvfields.append({key: "STRING"})
-#    with open("personal.json", "w") as json_file:
-#        json.dump(liststock, json_file)
+    #    with open("personal.json", "w") as json_file:
+    #        json.dump(liststock, json_file)
 
     bq_method.TruncateTable(bqtable, bqdataset, bqjsonservicefile)
 
@@ -470,13 +457,46 @@ def export_price_to_bq(fileconfi1c, bqjsonservicefile, bqdataset, bqtable):
     )
     cli.delete_changes_from_exchangeplan()
 
-def export_order_status_history_from_1c2bq(config_1c,bqjsonservicefile,bqdataset,  bqtable):
+
+def export_order_status_history_from_1c2bq(
+    config_1c, bqjsonservicefile, bqdataset, bqtable
+):
     with open(config_1c, encoding="utf-8") as f:
         config = yaml.safe_load(f)
     cli = Client1c(config)
     cli.connect()
-    resultlist=cli.get_order_history_status()
+    resultlist = cli.get_order_history_status()
     bq_method.export_js_to_bq(
-        resultlist, bqtable, bqjsonservicefile, bqdataset, logger,[]
+        resultlist, bqtable, bqjsonservicefile, bqdataset, logger, []
     )
 
+
+def export_documents_of_service_receipt_from_1c2bq(
+    config_1c, bqjsonservicefile, bqdataset, bqtable, dateStart, dateEnd
+):
+    with open(config_1c, encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+    cli = Client1c(config)
+    cli.connect()
+    resultlist = cli.get_documents_of_service_receipt(dateStart, dateEnd)
+    if len(resultlist) > 0:
+        filterList = []
+        filterList.append(
+            {
+                "fieldname": "date_doc",
+                "operator": ">=",
+                "value": dateStart.strftime("%Y-%m-%d"),
+            }
+        )
+        filterList.append(
+            {
+                "fieldname": "date_doc",
+                "operator": "<=",
+                "value": dateEnd.strftime("%Y-%m-%d"),
+            }
+        )
+        bq_method.DeleteRowFromTable(bqtable, bqdataset, bqjsonservicefile, filterList)
+
+    bq_method.export_js_to_bq(
+        resultlist, bqtable, bqjsonservicefile, bqdataset, logger, []
+    )

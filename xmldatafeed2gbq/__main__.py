@@ -372,9 +372,10 @@ def upload_stocks_from_1c2ym(
 @logger.catch
 @app.command()
 def upload_document_service_from_1c2bq(
-    bqjsonservicefile: str,
+    bqjsonservicefile: str = "polar.json",
     bqdataset: str = "DB1C",
     bqtable: str = "ReceiptOfServices",
+    fileconfig1c: str = "client1C_config.yml",
     period_option: periodOption = periodOption.manual,
     datestock_start_str: str = "",
     datestock_end_str: str = "",
@@ -382,10 +383,8 @@ def upload_document_service_from_1c2bq(
     daterange = fill_daterange_from_option(
         datestock_end_str, datestock_start_str, period_option
     )
-    with open("client1C_config.yml", encoding="utf-8") as f:
-        config = yaml.safe_load(f)
     export_documents_of_service_receipt_from_1c2bq(
-        config,
+        fileconfig1c,
         bqjsonservicefile,
         bqdataset,
         bqtable,

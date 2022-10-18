@@ -7,7 +7,13 @@ import method_telegram
 import transfer_method
 import typer
 import yaml
-from client1c import export_item_to_bq, export_price_to_bq, upload_from_1c,export_order_status_history_from_1c2bq
+from client1c import (
+    export_documents_of_service_receipt_from_1c2bq,
+    export_item_to_bq,
+    export_order_status_history_from_1c2bq,
+    export_price_to_bq,
+    upload_from_1c,
+)
 from common_type import periodOption
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
@@ -274,6 +280,7 @@ def uploadfrom1C_price(
 ) -> None:
     export_price_to_bq(fileconfig1c, bqjsonservicefile, bqdataset, bqtable)
 
+
 @logger.catch
 @app.command()
 def uploadfrom1C_orders_history_status(
@@ -282,7 +289,9 @@ def uploadfrom1C_orders_history_status(
     bqtable: str = "orders_history_status1C",
     fileconfig1c: str = "client1C_config.yml",
 ) -> None:
-    export_order_status_history_from_1c2bq(fileconfig1c, bqjsonservicefile, bqdataset, bqtable)
+    export_order_status_history_from_1c2bq(
+        fileconfig1c, bqjsonservicefile, bqdataset, bqtable
+    )
 
 
 @logger.catch
@@ -358,6 +367,31 @@ def upload_stocks_from_1c2ym(
     fileconfigyandex: str = "config_yandex.yml",
 ):
     transfer_method.export_stocks_from_1c2ym(fileconfig1c, fileconfigyandex)
+
+
+@logger.catch
+@app.command()
+def upload_document_service_from_1c2bq(
+    bqjsonservicefile: str,
+    bqdataset: str = "DB1C",
+    bqtable: str = "ReceiptOfServices",
+    period_option: periodOption = periodOption.manual,
+    datestock_start_str: str = "",
+    datestock_end_str: str = "",
+) -> None:
+    daterange = fill_daterange_from_option(
+        datestock_end_str, datestock_start_str, period_option
+    )
+    with open("client1C_config.yml", encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+    export_documents_of_service_receipt_from_1c2bq(
+        config,
+        bqjsonservicefile,
+        bqdataset,
+        bqtable,
+        daterange["datefrom"],
+        daterange["dateto"],
+    )
 
 
 if __name__ == "__main__":

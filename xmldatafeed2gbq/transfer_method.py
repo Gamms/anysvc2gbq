@@ -1,14 +1,14 @@
 import datetime
 
-from dateutil.relativedelta import relativedelta
-
 import bq_method
 import ozon_method
 import wb_client
 import yaml
 import yandex.yclient
 from client1c import Client1c, daterange
+from convert_method import checkTypeFieldFloat
 from dateutil import parser
+from dateutil.relativedelta import relativedelta
 from loguru import logger
 from ozon_client import OZONApiClient
 
@@ -753,11 +753,6 @@ def export_orders_from_ym2bq(
         )
 
 
-def checkTypeFieldFloat(newdict, elfield):
-    if newdict.__contains__(elfield) and type(newdict[elfield]) is not float:
-        newdict[elfield] = ozon_method.parse_float(newdict[elfield])
-
-
 def export_stocks_from_1c2ym(config_1c, config_ym):
     with open(config_1c, encoding="utf-8") as f:
         config = yaml.safe_load(f)
@@ -854,7 +849,7 @@ def clean_table_if_necessary(
         loger.info(f"чистим записи {method} в bq с {datefrom}:")
         bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
 
-    elif option == "byPeriod" and method!='reportsale':
+    elif option == "byPeriod" and method != "reportsale":
         filterList.append(
             {
                 "fieldname": field_date,
@@ -898,7 +893,7 @@ def clean_table_if_necessary(
             }
         )
         bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
-    elif method=='reportsale':
+    elif method == "reportsale":
         logger.info(f"Чистим  данные в {tablebq} по {len(items)} отчетам")
         fieldname = "operation_date"
         filterList = []
@@ -909,7 +904,7 @@ def clean_table_if_necessary(
                 "value": wb_id,
             }
         )
-        reportIdSet=set()
+        reportIdSet = set()
         for elitems in items:
             reportIdSet.add(f"'{elitems[idfield]}'")
 

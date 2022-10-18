@@ -5,9 +5,9 @@ from enum import Enum
 
 import requests
 from common_type import Struct
+from convert_method import checkTypeFieldFloat
 from dateutil import parser
 from loguru import logger
-from transfer_method import checkTypeFieldFloat
 
 timeout = 60  # таймаут 60 секунд
 apimethods = {

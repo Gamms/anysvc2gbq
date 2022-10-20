@@ -243,6 +243,8 @@ def js_2_plainjs(js, method, ozon_id):
             "MarketplaceServiceDCFlowTrans",
             "MarketplaceRedistributionOfAcquiringOperation",
             "MarketplaceServiceItemDirectFlowLogistic",
+            "MarketplaceServiceItemDirectFlowLogisticVDC",
+            "MarketplaceServicePremiumCashback",
         ]
         for el in js:
             sumservices = 0
@@ -472,6 +474,8 @@ def fields_from_method(method):
         csvfields.append({"MarketplaceServiceDCFlowTrans": "FLOAT"})
         csvfields.append({"MarketplaceRedistributionOfAcquiringOperation": "FLOAT"})
         csvfields.append({"MarketplaceServiceItemDirectFlowLogistic": "FLOAT"})
+        csvfields.append({"MarketplaceServicePremiumCashback": "FLOAT"})
+        csvfields.append({"MarketplaceServiceItemDirectFlowLogisticVDC": "FLOAT"})
 
     elif method == "___orders" or method == "___fbo_orders":
         csvfields = []

@@ -241,23 +241,16 @@ class Client1c:
         query = self.connection.NewObject("Query", textquery)
         query.SetParameter(
             "НачалоПериода",
-            self.connection.newObject(
-                "Граница",
-                self.connection.ValueFromStringInternal(
-                    f'{{"D",{dateStart.replace(hour=23, minute=59, second=59, microsecond=0).strftime("%Y%m%d%H%M%S")}}}'
-                ),
-                self.connection.ВидГраницы.Включая,
+            self.connection.ValueFromStringInternal(
+                f'{{"D",{dateStart.replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y%m%d%H%M%S")}}}'
             ),
         )
         query.SetParameter(
             "КонецПериода",
-            self.connection.newObject(
-                "Граница",
-                self.connection.ValueFromStringInternal(
-                    f'{{"D",{dateEnd.replace(hour=23, minute=59, second=59, microsecond=0).strftime("%Y%m%d%H%M%S")}}}'
-                ),
-                self.connection.ВидГраницы.Включая,
+            self.connection.ValueFromStringInternal(
+                f'{{"D",{dateEnd.replace(hour=23, minute=59, second=59, microsecond=0).strftime("%Y%m%d%H%M%S")}}}'
             ),
+            self.connection.ВидГраницы.Включая,
         )
 
         choose = query.execute().choose()

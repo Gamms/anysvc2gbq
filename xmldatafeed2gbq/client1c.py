@@ -271,8 +271,8 @@ class Client1c:
             dict["number_incoming"] = choose.number_incoming
             dict["Org"] = choose.Org
             dict["Quantity"] = choose.Quantity
-            dict["Сost_item"] = choose.Сost_item
-            dict["Сost_item_cod"] = choose.Сost_item_cod
+            dict["Cost_item"] = choose.Сost_item
+            dict["Cost_item_cod"] = choose.Сost_item_cod
             resultlist.append(dict)
         return resultlist
 

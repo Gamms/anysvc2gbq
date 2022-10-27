@@ -763,6 +763,13 @@ def export_stocks_from_1c2ym(config_1c, config_ym):
         config = yaml.safe_load(f)
 
     for lkConfig in config["lks"]:
+        if not lkConfig["lk"]["active"]:
+            logger.info(
+                f"Импорт из YM {campaign} {lkConfig['lk']['description']} отключен в настройках (свойство active из yml)"
+            )
+
+            continue
+
         campaign = lkConfig["lk"]["campaign"]
         oath_id = lkConfig["lk"]["oath_id"]
         oath_token = lkConfig["lk"]["oath_token"]

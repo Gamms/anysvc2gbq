@@ -135,3 +135,5 @@ dataset:
    srid: STRING
    date_from: TIMESTAMP
    date_to: TIMESTAMP
+   acquiring_fee: FLOAT
+   acquiring_bank: STRING

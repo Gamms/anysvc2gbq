@@ -32,6 +32,8 @@ def get_schema_field_from_dict(fields: dict) -> list:
 
 
 def export_js_to_bq(js, tableid, key_path, dataset_id, loger, fields_list):
+    if len(js) == 0:  # выгружаем только если есть что выгружать
+        loger.info(f"Нет данных для выгрузки dataset: {dataset_id} table: {tableid} " )
     table_id = tableid
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
     credentials = service_account.Credentials.from_service_account_file(
@@ -221,6 +223,10 @@ def get_selectquery_for_table(key_path, dataset_id, table_id, filtersList, field
 
 
 def DeleteRowFromTable(table_id, dataset_id, key_path, filtersList: list):
+    if len(filtersList)== 0:
+        #добавим проверку для удаления
+        logger.error("No filters to delete_useless_field")
+        raise ValueError("No filters to delete_useless_field")
     os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = key_path
     credentials = get_credential(key_path)
     fulltableid = get_full_tableid(credentials, dataset_id, table_id)

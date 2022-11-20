@@ -1,14 +1,14 @@
 import datetime
 
+from dateutil.relativedelta import relativedelta
+
 import bq_method
 import ozon_method
 import wb_client
 import yaml
 import yandex.yclient
 from client1c import Client1c, daterange
-from convert_method import checkTypeFieldFloat
 from dateutil import parser
-from dateutil.relativedelta import relativedelta
 from loguru import logger
 from ozon_client import OZONApiClient
 
@@ -694,10 +694,9 @@ def export_orders_from_ym2bq(
                 el.__contains__("items") and type(el["items"]) is list
             ):  # проверим наличие финансового блока
                 sumCommision = 0
-                dictComission = {}
                 for commEl in el["commissions"]:
                     sumCommision = sumCommision + commEl["predicted"]
-                    dictComission[commEl["type"]] = commEl["predicted"]
+
                 for item in el[
                     "items"
                 ]:  # пробежимся по тч из заказа и объединим их в строку
@@ -716,8 +715,6 @@ def export_orders_from_ym2bq(
                     newdict["dateExport"] = datetime.datetime.today().isoformat()
                     newdict["sumCommision"] = sumCommision
                     newdict["articleCustomer"] = catalogCache.get(newdict["shopSku"])
-                    newdict.update(dictComission)
-                    dictComission = {}
                     for key, value in list(newdict.items()):  # удалим ненужные элементы
                         if type(value) is list or type(value) is dict:
                             del newdict[key]
@@ -763,13 +760,6 @@ def export_stocks_from_1c2ym(config_1c, config_ym):
         config = yaml.safe_load(f)
 
     for lkConfig in config["lks"]:
-        if not lkConfig["lk"]["active"]:
-            logger.info(
-                f"Импорт из YM {campaign} {lkConfig['lk']['description']} отключен в настройках (свойство active из yml)"
-            )
-
-            continue
-
         campaign = lkConfig["lk"]["campaign"]
         oath_id = lkConfig["lk"]["oath_id"]
         oath_token = lkConfig["lk"]["oath_token"]
@@ -856,7 +846,7 @@ def clean_table_if_necessary(
         loger.info(f"чистим записи {method} в bq с {datefrom}:")
         bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
 
-    elif option == "byPeriod" and method != "reportsale":
+    elif option == "byPeriod" and method!='reportsale':
         filterList.append(
             {
                 "fieldname": field_date,
@@ -900,7 +890,7 @@ def clean_table_if_necessary(
             }
         )
         bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
-    elif method == "reportsale":
+    elif method=='reportsale':
         logger.info(f"Чистим  данные в {tablebq} по {len(items)} отчетам")
         fieldname = "operation_date"
         filterList = []
@@ -911,7 +901,7 @@ def clean_table_if_necessary(
                 "value": wb_id,
             }
         )
-        reportIdSet = set()
+        reportIdSet=set()
         for elitems in items:
             reportIdSet.add(f"'{elitems[idfield]}'")
 

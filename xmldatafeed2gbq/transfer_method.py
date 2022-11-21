@@ -720,34 +720,49 @@ def export_orders_from_ym2bq(
                             del newdict[key]
 
                     newlist.append(newdict)
-        if len(itemstotal) > 0 and changes == False:
+        if len(newlist) == 0:
+            logger.info(f"Нет данных для выгрузки YM campaign:{campaign}")
+        else:
             filterList = []
-
-            filterList.append(
-                {
-                    "fieldname": field_date,
-                    "operator": ">=",
-                    "value": dateFrom.strftime("%Y-%m-%d"),
-                }
-            )
-            filterList.append(
-                {
-                    "fieldname": field_date,
-                    "operator": "<=",
-                    "value": dateTo.strftime("%Y-%m-%d"),
-                }
-            )
-
             filterList.append(
                 {"fieldname": field_id, "operator": "=", "value": int(campaign)}
             )
+            if changes == False:  # если не изменения то удаляем за период
+                field_date = 'creationDate'
+                filterList.append(
+                    {
+                        "fieldname": field_date,
+                        "operator": ">=",
+                        "value": dateFrom.strftime("%Y-%m-%d"),
+                    }
+                )
+                filterList.append(
+                    {
+                        "fieldname": field_date,
+                        "operator": "<=",
+                        "value": dateTo.strftime("%Y-%m-%d"),
+                    }
+                )
+            else:
+                orderidlist = ""
+                for elitem in newlist:
+                    if orderidlist != "":
+                        orderidlist = orderidlist + ","
+                    orderid = str(elitem["id"])
+                    orderidlist = orderidlist + f"'{orderid}'"
+                filterList.append(
+                    {
+                        "fieldname": "id",
+                        "operator": " IN ",
+                        "value": orderidlist,
+                    }
+                )
             bq_method.DeleteRowFromTable(
                 bqtable, bqdataset, bqjsonservicefile, filterList
             )
-
-        bq_method.export_js_to_bq(
-            newlist, bqtable, bqjsonservicefile, bqdataset, logger, []
-        )
+            bq_method.export_js_to_bq(
+                newlist, bqtable, bqjsonservicefile, bqdataset, logger, []
+            )
 
 
 def export_stocks_from_1c2ym(config_1c, config_ym):

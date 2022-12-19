@@ -208,6 +208,8 @@ def _make_request_v1(uri, params, timeout=60):
             if res.status_code == 200:
                 return res
             if res.status_code == 429:
+                if res.text.find("перерыв") > -1:
+                    raise f"Перерыв работы сервиса WB:{uri}"
                 logger.info(f"Too many requests, wait 60 sec:{uri}")
                 time.sleep(timeout)
                 continue

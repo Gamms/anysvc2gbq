@@ -1,7 +1,5 @@
 import datetime
 
-from dateutil.relativedelta import relativedelta
-
 import bq_method
 import ozon_method
 import wb_client
@@ -9,6 +7,7 @@ import yaml
 import yandex.yclient
 from client1c import Client1c, daterange
 from dateutil import parser
+from dateutil.relativedelta import relativedelta
 from loguru import logger
 from ozon_client import OZONApiClient
 
@@ -289,8 +288,9 @@ def wb_export(
 
     for lkConfig in config["lks"]:
         wb_id = lkConfig["lk"]["bq_id"]
-        apikey_v1 = lkConfig["lk"]["apikey"]
-        apikey_v2 = lkConfig["lk"]["apikeyv2"]
+        # apikey_v1 = lkConfig["lk"]["apikey"] неактуальны работают с фефраля 2023
+        # apikey_v2 = lkConfig["lk"]["apikeyv2"]
+        apikey_v3 = lkConfig["lk"]["apikeyv3"]
         if not lkConfig["lk"]["active"]:
             logger.info(
                 f"Импорт из WB {wb_id} отключен в настройках (свойство active из yml)"
@@ -299,7 +299,7 @@ def wb_export(
             continue
 
         if method == "ordersv2":
-            cli = wb_client.WBApiClient(wb_id, apikey_v2)
+            cli = wb_client.WBApiClient(wb_id, apikey_v3)
             datefrom, dateto = fill_date(
                 option,
                 bqtable,
@@ -372,7 +372,7 @@ def wb_export(
                 logger.info("Нет данных")
             logger.info(f"end")
         elif method == "stocks_v2":
-            cli = wb_client.WBApiClient(wb_id, apikey_v2)
+            cli = wb_client.WBApiClient(wb_id, apikey_v3)
             if datefrom == "":
                 datefrom = datetime.date.today()
                 dateto = datetime.date.today()
@@ -402,7 +402,7 @@ def wb_export(
                 logger.info("Нет данных")
             logger.info(f"end")
         elif method in ("sales", "reportsale", "orders", "stocks_v1", "invoice_v1"):
-            cli = wb_client.WBApiClient(wb_id, key_v1=apikey_v1, key_v2=apikey_v2)
+            cli = wb_client.WBApiClient(wb_id, apikey_v3)
             period = False
             if method == "stocks_v1":
                 if datefrom == "":
@@ -728,7 +728,7 @@ def export_orders_from_ym2bq(
                 {"fieldname": field_id, "operator": "=", "value": int(campaign)}
             )
             if changes == False:  # если не изменения то удаляем за период
-                field_date = 'creationDate'
+                field_date = "creationDate"
                 filterList.append(
                     {
                         "fieldname": field_date,
@@ -861,7 +861,7 @@ def clean_table_if_necessary(
         loger.info(f"чистим записи {method} в bq с {datefrom}:")
         bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
 
-    elif option == "byPeriod" and method!='reportsale':
+    elif option == "byPeriod" and method != "reportsale":
         filterList.append(
             {
                 "fieldname": field_date,
@@ -905,7 +905,7 @@ def clean_table_if_necessary(
             }
         )
         bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
-    elif method=='reportsale':
+    elif method == "reportsale":
         logger.info(f"Чистим  данные в {tablebq} по {len(items)} отчетам")
         fieldname = "operation_date"
         filterList = []
@@ -916,7 +916,7 @@ def clean_table_if_necessary(
                 "value": wb_id,
             }
         )
-        reportIdSet=set()
+        reportIdSet = set()
         for elitems in items:
             reportIdSet.add(f"'{elitems[idfield]}'")
 

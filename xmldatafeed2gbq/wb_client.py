@@ -6,14 +6,18 @@ from dateutil import parser
 from loguru import logger
 
 
+def get_statistic_url():
+    return "https://statistics-api.wildberries.ru/"
+
+
 class WBApiClient:
-    def __init__(self, wbid, key_v2="", key_v1=""):
-        self.apikey_v2 = key_v2
-        self.apikey_v1 = key_v1
+    def __init__(self, wbid, api_key):
+        self.api_key = api_key
+
         self.wbid = wbid
 
     def get_header_v2(self):
-        return {"Authorization": self.apikey_v2, "Content-Type": "application/json"}
+        return {"Authorization": self.api_key, "Content-Type": "application/json"}
 
     def get_orders_v2(self, datefrom, dateto):
         url = "https://suppliers-api.wildberries.ru/api/v2/orders"
@@ -65,7 +69,7 @@ class WBApiClient:
         return orderstotal
 
     def get_orders_v1(self, datefrom, dateto, option, filterfielddate):
-        uri = "https://suppliers-stats.wildberries.ru/api/v1/supplier/orders"
+        uri = get_statistic_url() + "/api/v1/supplier/orders"
         flag = 1
         jsresult = []
         if option == "changes":
@@ -73,10 +77,10 @@ class WBApiClient:
         params = [
             ("dateFrom", datefrom.isoformat()),
             ("dateto", dateto.isoformat()),
-            ("key", self.apikey_v1),
+            #    ("key", self.api_key),
             ("flag", flag),
         ]
-        res = _make_request_v1(uri, params)
+        res = self._make_request_v1(uri, params)
         if res != None:
             jsresult = transform_res2js(
                 filterfielddate, res, datefrom, self.wbid, option, dateto
@@ -84,14 +88,14 @@ class WBApiClient:
         return jsresult
 
     def get_invoice_v1(self, datefrom, dateto, option, filterfielddate):
-        uri = "https://suppliers-stats.wildberries.ru/api/v1/supplier/incomes"
+        uri = get_statistic_url() + "/api/v1/supplier/incomes"
         jsresult = []
         params = [
             ("dateFrom", datefrom.isoformat()),
             ("dateto", dateto.isoformat()),
-            ("key", self.apikey_v1),
+            #  ("key", self.api_key),
         ]
-        res = _make_request_v1(uri, params)
+        res = self._make_request_v1(uri, params)
         if res != None:
             jsresult = transform_res2js(
                 filterfielddate, res, datefrom, self.wbid, option, dateto
@@ -116,14 +120,14 @@ class WBApiClient:
         return jsresult
 
     def get_stocks_v1(self):
-        url = "https://suppliers-stats.wildberries.ru/api/v1/supplier/stocks"
+        url = get_statistic_url() + "/api/v1/supplier/stocks"
         filterfielddate = "date_stocks"
 
         params = [
             ("dateFrom", datetime.datetime(2020, 1, 1).isoformat()),
-            ("key", self.apikey_v1),
+            # ("key", self.api_key),
         ]
-        res = _make_request_v1(url, params)
+        res = self._make_request_v1(url, params)
         if res != None:
             jsres = res.json()
             if len(jsres) == 0:
@@ -147,7 +151,7 @@ class WBApiClient:
             return jsres
 
     def get_sales_v1(self, datefrom, dateto, option, filterfielddate):
-        uri = "https://suppliers-stats.wildberries.ru/api/v1/supplier/sales"
+        uri = get_statistic_url() + "/api/v1/supplier/sales"
         flag = 1
         filterfielddate = "date"
         if option == "changes":
@@ -156,17 +160,17 @@ class WBApiClient:
         params = [
             ("dateFrom", datefrom.isoformat()),
             ("dateto", dateto.isoformat()),
-            ("key", self.apikey_v1),
+            # ("key", self.api_key),
             ("flag", flag),
         ]
-        res = _make_request_v1(uri, params)
+        res = self._make_request_v1(uri, params)
         jsresult = transform_res2js(
             filterfielddate, res, datefrom, self.wbid, option, dateto
         )
         return jsresult
 
     def get_reportsale_v1(self, datefrom, dateto, option, filterfielddate):
-        uri = "https://suppliers-stats.wildberries.ru/api/v1/supplier/reportDetailByPeriod"
+        uri = get_statistic_url() + "/api/v1/supplier/reportDetailByPeriod"
         rrdid = 0
         jsresulttotal = []
         jsresult = self.get_result_from_query(
@@ -190,45 +194,44 @@ class WBApiClient:
         params = [
             ("dateFrom", datefrom.isoformat()),
             ("dateto", dateto.isoformat()),
-            ("key", self.apikey_v1),
+            # ("key", self.api_key),
             ("rrdid", rrdid),
         ]
-        res = _make_request_v1(uri, params)
+        res = self._make_request_v1(uri, params)
         jsresult = transform_res2js(
             filterfielddate, res, datefrom, self.wbid, option, dateto
         )
         return jsresult
 
-
-def _make_request_v1(uri, params, timeout=60):
-
-    for i in range(1, 5):
-        try:
-            res = requests.get(uri, params=params, timeout=timeout)
-            if res.status_code == 200:
-                return res
-            if res.status_code == 429:
-                if res.text.find("перерыв") > -1:
-                    raise f"Перерыв работы сервиса WB:{uri}"
-                logger.info(f"Too many requests, wait 60 sec:{uri}")
-                time.sleep(timeout)
+    def _make_request_v1(self, uri, params, timeout=60):
+        headers = self.get_header_v2()
+        for i in range(1, 5):
+            try:
+                res = requests.get(uri, params=params, timeout=timeout, headers=headers)
+                if res.status_code == 200:
+                    return res
+                if res.status_code == 429:
+                    if res.text.find("перерыв") > -1:
+                        raise f"Перерыв работы сервиса WB:{uri}"
+                    logger.info(f"Too many requests, wait 60 sec:{uri}")
+                    time.sleep(timeout)
+                    continue
+                elif res.status_code == 502:
+                    logger.info(f"502 error, wait 60 sec:{uri}")
+                    time.sleep(timeout)
+                    continue
+                else:
+                    logger.info(f"Ошибка запроса. Статус ответа:{res.status_code}")
+                    break
+            except requests.exceptions.ReadTimeout:
+                timeout = +60
                 continue
-            elif res.status_code == 502:
-                logger.info(f"502 error, wait 60 sec:{uri}")
-                time.sleep(timeout)
-                continue
-            else:
-                logger.info(f"Ошибка запроса. Статус ответа:{res.status_code}")
-                break
-        except requests.exceptions.ReadTimeout:
-            timeout = +60
-            continue
-        except Exception as e:
-            raise e
-    logger.error(f"Ошибка запроса:{uri}")
-    logger.error(f"параметры:{params}")
+            except Exception as e:
+                raise e
+        logger.error(f"Ошибка запроса:{uri}")
+        logger.error(f"параметры:{params}")
 
-    return
+        return
 
 
 def transform_res2js(filter_field_date, res, datefrom, wb_id, option, dateto):

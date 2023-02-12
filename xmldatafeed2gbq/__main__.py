@@ -393,6 +393,7 @@ def upload_document_service_from_1c2bq(
     )
 
 
+
 if __name__ == "__main__":
     tg_handler = method_telegram.get_loguru_telegramm_notification_handler(
         logger, "-1001572341087", "2028570019:AAEhd5gfY6qxZRmJZfymO82xSO4E-VuMXjU"

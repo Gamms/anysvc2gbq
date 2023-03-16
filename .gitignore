@@ -621,3 +621,4 @@ MigrationBackup/
 /xmldatafeed2gbq/config_wb.yml
 /xmldatafeed2gbq/config_ozon.yml
 /xmldatafeed2gbq/config_yandex.yml
+/xmldatafeed2gbq/config_wb_backup.yml

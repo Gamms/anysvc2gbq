@@ -10,7 +10,7 @@ from dateutil import parser
 from dateutil.relativedelta import relativedelta
 from loguru import logger
 from ozon_client import OZONApiClient
-
+from convert_method import checkTypeFieldFloat
 
 def export_orders_from_ozon2bq_updated_in_the_period(
     datarange, bqdataset, bqjsonservicefile, bqtable, configyml, method

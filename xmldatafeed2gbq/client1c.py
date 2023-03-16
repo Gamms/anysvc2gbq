@@ -244,9 +244,12 @@ class Client1c:
         resultlist = []
         while choose.next():
             dict = {}
-            dict["DateOrder"] = choose.DateOrder.isoformat()
-            dict["DateReport"] = choose.DateReport.isoformat()
-            dict["DateSale"] = choose.DateSale.isoformat()
+            if choose.DateOrder != None:
+                dict["DateOrder"] = choose.DateOrder.isoformat()
+            if choose.DateReport != None:
+                dict["DateReport"] = choose.DateReport.isoformat()
+            if choose.DateSale != None:
+                dict["DateSale"] = choose.DateSale.isoformat()
 
             dict["ArticulNom"] = choose.ArticulNom
             dict["CodeNom"] = choose.CodeNom
@@ -535,7 +538,7 @@ def export_documents_commission_report_from_1c2bq(
         config = yaml.safe_load(f)
     cli = Client1c(config)
     cli.connect()
-    resultlist = cli.get_documents_of_service_receipt()
+    resultlist = cli.get_comission_report()
     # if len(resultlist) > 0:
     # filterList = []
     # filterList.append(

@@ -234,6 +234,39 @@ class Client1c:
             resultlist.append(dict)
         return resultlist
 
+    def get_comission_report(self) -> list:
+        if self.connection == None:
+            raise "Нет подключения к базе 1С"
+        textquery = get_query_documents_of_comission_report()
+        query = self.connection.NewObject("Query", textquery)
+
+        choose = query.execute().choose()
+        resultlist = []
+        while choose.next():
+            dict = {}
+            dict["DateOrder"] = choose.DateOrder.isoformat()
+            dict["DateReport"] = choose.DateReport.isoformat()
+            dict["DateSale"] = choose.DateSale.isoformat()
+
+            dict["ArticulNom"] = choose.ArticulNom
+            dict["CodeNom"] = choose.CodeNom
+            dict["DescriptionNom"] = choose.DescriptionNom
+            dict["IdNom"] = choose.IdNom
+
+            dict["NumberOrder"] = choose.NumberOrder
+            dict["NumberReport"] = choose.NumberReport
+            dict["NumberSale"] = choose.NumberSale
+
+            dict["Price"] = choose.Price
+            dict["Qty"] = choose.Qty
+            dict["Sum"] = choose.Sum
+            dict["SumFee"] = choose.SumFee
+
+            dict["Project"] = choose.Project
+            dict["Department"] = choose.Department
+            resultlist.append(dict)
+        return resultlist
+
     def get_documents_of_service_receipt(self, dateStart, dateEnd) -> list:
         if self.connection == None:
             raise "Нет подключения к базе 1С"
@@ -489,6 +522,37 @@ def export_documents_of_service_receipt_from_1c2bq(
             }
         )
         bq_method.DeleteRowFromTable(bqtable, bqdataset, bqjsonservicefile, filterList)
+
+    bq_method.export_js_to_bq(
+        resultlist, bqtable, bqjsonservicefile, bqdataset, logger, []
+    )
+
+
+def export_documents_commission_report_from_1c2bq(
+    config_1c, bqjsonservicefile, bqdataset, bqtable
+):
+    with open(config_1c, encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+    cli = Client1c(config)
+    cli.connect()
+    resultlist = cli.get_documents_of_service_receipt()
+    # if len(resultlist) > 0:
+    # filterList = []
+    # filterList.append(
+    #     {
+    #         "fieldname": "date_doc",
+    #         "operator": ">=",
+    #         "value": dateStart.strftime("%Y-%m-%d"),
+    #     }
+    # )
+    # filterList.append(
+    #     {
+    #         "fieldname": "date_doc",
+    #         "operator": "<=",
+    #         "value": dateEnd.strftime("%Y-%m-%d"),
+    #     }
+    # )
+    # bq_method.DeleteRowFromTable(bqtable, bqdataset, bqjsonservicefile, filterList)
 
     bq_method.export_js_to_bq(
         resultlist, bqtable, bqjsonservicefile, bqdataset, logger, []

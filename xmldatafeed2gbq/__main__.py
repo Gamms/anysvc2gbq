@@ -8,6 +8,7 @@ import transfer_method
 import typer
 import yaml
 from client1c import (
+    export_documents_commission_report_from_1c2bq,
     export_documents_of_service_receipt_from_1c2bq,
     export_item_to_bq,
     export_order_status_history_from_1c2bq,
@@ -390,6 +391,25 @@ def upload_document_service_from_1c2bq(
         bqtable,
         daterange["datefrom"],
         daterange["dateto"],
+    )
+
+
+@logger.catch
+@app.command()
+def upload_document_commission_report(
+    bqjsonservicefile: str = "polar.json",
+    bqdataset: str = "DB1C",
+    bqtable: str = "ComissionReport",
+    fileconfig1c: str = "client1C_config.yml",
+    period_option: periodOption = periodOption.manual,
+    datestock_start_str: str = "",
+    datestock_end_str: str = "",
+) -> None:
+    export_documents_commission_report_from_1c2bq(
+        fileconfig1c,
+        bqjsonservicefile,
+        bqdataset,
+        bqtable,
     )
 
 

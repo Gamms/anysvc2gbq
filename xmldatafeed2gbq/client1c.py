@@ -108,6 +108,12 @@ class Client1c:
                 "статус по стратегии_OLAP"
             ),
         )
+        query.SetParameter(
+            "ДеливериСхем",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "Схема доставки_OLAP"
+            ),
+        )
 
         choose = query.execute().choose()
         liststock = []
@@ -145,6 +151,7 @@ class Client1c:
                 for_vpr = for_vpr + " " + dict["fabric_type"]
 
             dict["for_vpr"] = for_vpr
+            dict["delivery_scheme"] = choose.delivery_scheme
 
             liststock.append(dict)
         return liststock

@@ -696,7 +696,7 @@ def export_orders_from_ym2bq(
             ):  # проверим наличие финансового блока
                 sumCommision = 0
                 for commEl in el["commissions"]:
-                    sumCommision = sumCommision + commEl["predicted"]
+                    sumCommision = sumCommision + commEl["actual"]
 
                 for item in el[
                     "items"

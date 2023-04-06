@@ -399,7 +399,7 @@ def upload_document_service_from_1c2bq(
 def upload_document_commissionreport(
     bqjsonservicefile: str = "polar.json",
     bqdataset: str = "DB1C",
-    bqtable: str = "ReceiptOfServices",
+    bqtable: str = "CommissionReport",
     fileconfig1c: str = "client1C_config.yml",
 ) -> None:
     export_documents_commission_report_from_1c2bq(

@@ -6,11 +6,12 @@ import wb_client
 import yaml
 import yandex.yclient
 from client1c import Client1c, daterange
+from convert_method import checkTypeFieldFloat
 from dateutil import parser
 from dateutil.relativedelta import relativedelta
 from loguru import logger
 from ozon_client import OZONApiClient
-from convert_method import checkTypeFieldFloat
+
 
 def export_orders_from_ozon2bq_updated_in_the_period(
     datarange, bqdataset, bqjsonservicefile, bqtable, configyml, method
@@ -713,7 +714,7 @@ def export_orders_from_ym2bq(
 
                     newdict["ycampaignid"] = campaign
                     newdict["dateExport"] = datetime.datetime.today().isoformat()
-                    newdict["sumCommision"] = sumCommision
+                    newdict["sumCommision"] = float(sumCommision)
                     newdict["articleCustomer"] = catalogCache.get(newdict["shopSku"])
                     for key, value in list(newdict.items()):  # удалим ненужные элементы
                         if type(value) is list or type(value) is dict:

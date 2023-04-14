@@ -143,6 +143,7 @@ class Client1c:
             dict["textile_group"] = choose.textile_group
             dict["item_type"] = choose.item_type
             dict["strategy_status"] = choose.strategy_status
+            dict["item_volume"] = choose.item_volume
 
             for_vpr = ""
             if dict["form"] is not None:

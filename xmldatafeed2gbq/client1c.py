@@ -114,7 +114,12 @@ class Client1c:
                 "Схема доставки_OLAP"
             ),
         )
-
+        query.SetParameter(
+            "Объем",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "Обьем, куб.м (для НОВОГО МЛ)*"
+            ),
+        )
         choose = query.execute().choose()
         liststock = []
         while choose.next():

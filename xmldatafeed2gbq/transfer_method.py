@@ -719,7 +719,7 @@ def export_orders_from_ym2bq(
                     for key, value in list(newdict.items()):  # удалим ненужные элементы
                         if type(value) is list or type(value) is dict:
                             del newdict[key]
-
+                    newdict["shopSku"] = str(newdict["shopSku"])
                     newlist.append(newdict)
         if len(newlist) == 0:
             logger.info(f"Нет данных для выгрузки YM campaign:{campaign}")

@@ -138,3 +138,32 @@ dataset:
    acquiring_fee: FLOAT
    acquiring_bank: STRING
    create_dt: TIMESTAMP
+ YM:
+   orders:
+     CASHBACKcostPerItem: FLOAT
+     sumCommision: FLOAT
+     articleCustomer: STRING
+     dateExport: TIMESTAMP
+     whname: STRING
+     CASHBACKtotal: FLOAT
+     BUYERtotal: FLOAT
+     MARKETPLACEcostPerItem: FLOAT
+     partnerOrderId: INTEGER
+     deliveryRegionId: INTEGER
+     bidFee: INTEGER
+     status: STRING
+     deliveryRegionName: STRING
+     shopSku: STRING
+     creationDate: DATE
+     statusUpdateDate: TIMESTAMP
+     BUYERcostPerItem: FLOAT
+     marketSku: INTEGER
+     whid: INTEGER
+     count: INTEGER
+     ycampaignid: INTEGER
+     offerName: STRING
+     fake: BOOLEAN
+     paymentType: STRING
+     MARKETPLACEtotal: FLOAT
+     id: INTEGER
+     AGENCY: FLOAT

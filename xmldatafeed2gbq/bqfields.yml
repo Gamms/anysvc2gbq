@@ -34,6 +34,7 @@ dataset:
    lastChangeDate: TIMESTAMP
    sticker: STRING
    srid: STRING
+   orderType: STRING
   stocks_v2:
    brand: STRING
    name: STRING
@@ -139,6 +140,13 @@ dataset:
    acquiring_fee: FLOAT
    acquiring_bank: STRING
    create_dt: TIMESTAMP
+   currency_name: STRING
+   sup_rating_prc_up: INTEGER
+   is_kgvp_v2: INTEGER
+   rebill_logistic_cost: FLOAT
+   rebill_logistic_org: STRING
+   kiz: STRING
+
  YM:
    orders:
      CASHBACKcostPerItem: FLOAT

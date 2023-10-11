@@ -240,3 +240,21 @@ dataset:
      item_marketplace_service_item_dropoff_ff: FLOAT
      cancel_reason_id: INTEGER
      status: string
+ DB1C:
+  CommissionReport:
+   NumberReport: STRING
+   DateReport: TIMESTAMP
+   ArticulNom: STRING
+   DescriptionNom: STRING
+   CodeNom: STRING
+   Price: FLOAT
+   Qty: INTEGER
+   Sum: FLOAT
+   SumFee: FLOAT
+   NumberOrder: STRING
+   DateOrder: TIMESTAMP
+   NumberSale: STRING
+   DateSale: TIMESTAMP
+   IdNom: INTEGER
+   Project: STRING
+   Department: STRING

@@ -10,6 +10,7 @@ import method_telegram
 import ozon_method
 import transfer_method
 import verifydata
+from client1c import export_documents_commission_report_from_1c2bq
 from loguru import logger
 from tkcalendar import DateEntry
 
@@ -91,6 +92,7 @@ class App(tk.Tk):
         self.add_frame_wb()
         self.add_frame_ym()
         self.add_frame_verify()
+        self.add_frame_1C()
         frame = ttk.Frame(self.notebook)
 
         self.label = ttk.Label(self)
@@ -200,6 +202,61 @@ class App(tk.Tk):
         fileconfigyandex = "config_yandex.yml"
         transfer_method.export_stocks_from_1c2ym(fileconfig1c, fileconfigyandex)
 
+    def comission_report_1c(self, arg):
+        bqjsonservicefile = ("polar.json",)
+        bqdataset = ("DB1C",)
+        bqtable = ("CommissionReport",)
+        fileconfig1c = ("client1C_config.yml",)
+        export_documents_commission_report_from_1c2bq(
+            fileconfig1c,
+            bqjsonservicefile,
+            bqdataset,
+            bqtable,
+        )
+
+    def add_frame_1C(self):
+        frame = ttk.Frame(self.notebook)
+        entrydict = {}
+        self.notebook.add(frame, text="1C", underline=0, sticky=tk.NE + tk.SW)
+        frame_top = ttk.Frame(frame)
+        frame_top.pack(side=TOP)
+        frame_top1 = ttk.Frame(frame)
+        frame_top1.pack(side=TOP)
+        frame_top1left = ttk.Frame(frame_top1)
+        frame_top1left.pack(side=LEFT)
+        frame_top1right = ttk.Frame(frame_top1)
+        frame_top1right.pack(side=RIGHT)
+        b1 = ttk.Button(frame_top1left, text="1C Отчеты комиссионеров")
+        b1.bind("<Button-1>", self.comission_report_1c)
+        b1.pack(side=TOP, padx=1, pady=1)
+
+        ttk.Label(frame_top, text="Date from").pack(side=LEFT, padx=10, pady=10)
+        date_from_element = DateEntry(
+            frame_top,
+            locale="ru_RU",
+            date_pattern="dd-mm-y",
+            width=12,
+            background="darkblue",
+            foreground="white",
+            borderwidth=2,
+        )
+        date_from_element.pack(side=LEFT, padx=10, pady=10)
+        ttk.Label(frame_top, text="to").pack(side=LEFT, padx=10, pady=10)
+        date_to_element = DateEntry(
+            frame_top,
+            locale="ru_RU",
+            date_pattern="dd-mm-y",
+            width=12,
+            background="darkblue",
+            foreground="white",
+            borderwidth=2,
+        )
+        date_to_element.pack(side=LEFT, padx=10, pady=10)
+        entrydict = {}
+        entrydict["date_from_element"] = date_from_element
+        entrydict["date_to_element"] = date_to_element
+        self.entry_dict["frame_1C"] = entrydict
+
     def add_frame_ozone(self):
         frame = ttk.Frame(self.notebook)
         entrydict = {}
@@ -297,7 +354,9 @@ class App(tk.Tk):
 
     def get_max_wb_reportsale(self, bt):
         field = "rr_dt"
-        maxdatechange = bq_method.GetMaxRecord("reportsale", "wb", "polar.json", "", field)
+        maxdatechange = bq_method.GetMaxRecord(
+            "reportsale", "wb", "polar.json", "", field
+        )
         logger.debug(f"{field} :{maxdatechange}")
 
     def get_max_wb_orders(self, bt):

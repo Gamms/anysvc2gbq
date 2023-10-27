@@ -6,6 +6,7 @@
       <sourceFolder url="file://$MODULE_DIR$/xmldatafeed2gbq" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/venv" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
+      <excludeFolder url="file://$MODULE_DIR$/xmldatafeed2gbq/__main__.build" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

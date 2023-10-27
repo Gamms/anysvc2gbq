@@ -108,7 +108,18 @@ class Client1c:
                 "статус по стратегии_OLAP"
             ),
         )
-
+        query.SetParameter(
+            "ДеливериСхем",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "Схема доставки_OLAP"
+            ),
+        )
+        query.SetParameter(
+            "Объем",
+            self.connection.ПланыВидовХарактеристик.СвойстваОбъектов.findbydescription(
+                "Обьем, куб.м (для НОВОГО МЛ)*"
+            ),
+        )
         choose = query.execute().choose()
         liststock = []
         while choose.next():
@@ -137,6 +148,7 @@ class Client1c:
             dict["textile_group"] = choose.textile_group
             dict["item_type"] = choose.item_type
             dict["strategy_status"] = choose.strategy_status
+            dict["item_volume"] = choose.item_volume
 
             for_vpr = ""
             if dict["form"] is not None:
@@ -145,6 +157,7 @@ class Client1c:
                 for_vpr = for_vpr + " " + dict["fabric_type"]
 
             dict["for_vpr"] = for_vpr
+            dict["delivery_scheme"] = choose.delivery_scheme
 
             liststock.append(dict)
         return liststock
@@ -231,6 +244,42 @@ class Client1c:
             dict["order_date"] = choose.order_date.date().isoformat()
             dict["order_number"] = choose.order_number
             dict["updated_by"] = choose.updated_by
+            resultlist.append(dict)
+        return resultlist
+
+    def get_comission_report(self) -> list:
+        if self.connection == None:
+            raise "Нет подключения к базе 1С"
+        textquery = get_query_documents_of_comission_report()
+        query = self.connection.NewObject("Query", textquery)
+
+        choose = query.execute().choose()
+        resultlist = []
+        while choose.next():
+            dict = {}
+            if choose.DateOrder != None:
+                dict["DateOrder"] = choose.DateOrder.isoformat()
+            if choose.DateReport != None:
+                dict["DateReport"] = choose.DateReport.isoformat()
+            if choose.DateSale != None:
+                dict["DateSale"] = choose.DateSale.isoformat()
+
+            dict["ArticulNom"] = choose.ArticulNom
+            dict["CodeNom"] = choose.CodeNom
+            dict["DescriptionNom"] = choose.DescriptionNom
+            dict["IdNom"] = choose.IdNom
+
+            dict["NumberOrder"] = choose.NumberOrder
+            dict["NumberReport"] = choose.NumberReport
+            dict["NumberSale"] = choose.NumberSale
+
+            dict["Price"] = choose.Price
+            dict["Qty"] = choose.Qty
+            dict["Sum"] = choose.Sum
+            dict["SumFee"] = choose.SumFee
+
+            dict["Project"] = choose.Project
+            dict["Department"] = choose.Department
             resultlist.append(dict)
         return resultlist
 
@@ -489,6 +538,37 @@ def export_documents_of_service_receipt_from_1c2bq(
             }
         )
         bq_method.DeleteRowFromTable(bqtable, bqdataset, bqjsonservicefile, filterList)
+
+    bq_method.export_js_to_bq(
+        resultlist, bqtable, bqjsonservicefile, bqdataset, logger, []
+    )
+
+
+def export_documents_commission_report_from_1c2bq(
+    config_1c, bqjsonservicefile, bqdataset, bqtable
+):
+    with open(config_1c, encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+    cli = Client1c(config)
+    cli.connect()
+    resultlist = cli.get_comission_report()
+    # if len(resultlist) > 0:
+    # filterList = []
+    # filterList.append(
+    #     {
+    #         "fieldname": "date_doc",
+    #         "operator": ">=",
+    #         "value": dateStart.strftime("%Y-%m-%d"),
+    #     }
+    # )
+    # filterList.append(
+    #     {
+    #         "fieldname": "date_doc",
+    #         "operator": "<=",
+    #         "value": dateEnd.strftime("%Y-%m-%d"),
+    #     }
+    # )
+    # bq_method.DeleteRowFromTable(bqtable, bqdataset, bqjsonservicefile, filterList)
 
     bq_method.export_js_to_bq(
         resultlist, bqtable, bqjsonservicefile, bqdataset, logger, []

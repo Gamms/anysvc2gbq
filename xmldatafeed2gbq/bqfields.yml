@@ -34,6 +34,7 @@ dataset:
    lastChangeDate: TIMESTAMP
    sticker: STRING
    srid: STRING
+   orderType: STRING
   stocks_v2:
    brand: STRING
    name: STRING
@@ -72,6 +73,7 @@ dataset:
     subject: STRING
     number: STRING
     srid: STRING
+    orderType: STRING
   reportsale:
    bonus_type_name: STRING
    ppvz_office_name: STRING
@@ -138,3 +140,121 @@ dataset:
    acquiring_fee: FLOAT
    acquiring_bank: STRING
    create_dt: TIMESTAMP
+   currency_name: STRING
+   sup_rating_prc_up: INTEGER
+   is_kgvp_v2: INTEGER
+   rebill_logistic_cost: FLOAT
+   rebill_logistic_org: STRING
+   kiz: STRING
+
+ YM:
+   orders:
+     CASHBACKcostPerItem: FLOAT
+     sumCommision: FLOAT
+     articleCustomer: STRING
+     dateExport: TIMESTAMP
+     whname: STRING
+     CASHBACKtotal: FLOAT
+     BUYERtotal: FLOAT
+     MARKETPLACEcostPerItem: FLOAT
+     partnerOrderId: INTEGER
+     deliveryRegionId: INTEGER
+     bidFee: INTEGER
+     status: STRING
+     deliveryRegionName: STRING
+     shopSku: STRING
+     creationDate: DATE
+     statusUpdateDate: TIMESTAMP
+     BUYERcostPerItem: FLOAT
+     marketSku: INTEGER
+     whid: INTEGER
+     count: INTEGER
+     ycampaignid: INTEGER
+     offerName: STRING
+     fake: BOOLEAN
+     paymentType: STRING
+     MARKETPLACEtotal: FLOAT
+     id: INTEGER
+     AGENCY: FLOAT
+     cofinanceThreshold: FLOAT
+     cofinanceValue: FLOAT
+ OZON:
+   orders2021:
+     barcodes: STRING
+     tpl_integration_type: STRING
+     delivery_method_tpl_provider: STRING
+     delivery_method_name: STRING
+     is_express: BOOLEAN
+     offer_name: STRING
+     lower_barcode: INTEGER
+     product_id: INTEGER
+     item_marketplace_service_item_return_part_goods_customer: FLOAT
+     dateExport: TIMESTAMP
+     item_marketplace_service_item_deliv_to_customer: FLOAT
+     item_marketplace_service_item_return_flow_trans: FLOAT
+     delivery_method_warehouse: STRING
+     item_marketplace_service_item_pickup: FLOAT
+     ozon_id: STRING
+     is_legal: BOOLEAN
+     payment_type_group_name: STRING
+     delivery_type: STRING
+     item_marketplace_service_item_direct_flow_trans: FLOAT
+     city: STRING
+     marketplace_service_item_return_after_deliv_to_customer: FLOAT
+     marketplace_service_item_return_part_goods_customer: FLOAT
+     marketplace_service_item_return_not_deliv_to_customer: FLOAT
+     marketplace_service_item_direct_flow_trans: FLOAT
+     shipment_date: TIMESTAMP
+     marketplace_service_item_dropoff_ff: FLOAT
+     item_marketplace_service_item_return_after_deliv_to_customer: FLOAT
+     marketplace_service_item_deliv_to_customer: FLOAT
+     region: STRING
+     marketplace_service_item_pickup: FLOAT
+     client_price: STRING
+     item_marketplace_service_item_fulfillment: FLOAT
+     quantity: INTEGER
+     marketplace_service_item_return_flow_trans: FLOAT
+     marketplace_service_item_dropoff_pvz: FLOAT
+     picking: STRING
+     is_premium: BOOLEAN
+     commission_amount: FLOAT
+     marketplace_service_item_dropoff_sc: FLOAT
+     total_discount_percent: FLOAT
+     item_marketplace_service_item_return_not_deliv_to_customer: FLOAT
+     currency_code: STRING
+     upper_barcode: STRING
+     old_price: FLOAT
+     total_discount_value: FLOAT
+     offer_id: STRING
+     price: FLOAT
+     marketplace_service_item_fulfillment: FLOAT
+     item_marketplace_service_item_dropoff_sc: FLOAT
+     item_marketplace_service_item_dropoff_pvz: FLOAT
+     order_number: STRING
+     commission_percent: INTEGER
+     payout: FLOAT
+     in_process_at: TIMESTAMP
+     created_at: TIMESTAMP
+     order_id: INTEGER
+     posting_number: STRING
+     item_marketplace_service_item_dropoff_ff: FLOAT
+     cancel_reason_id: INTEGER
+     status: string
+ DB1C:
+  CommissionReport:
+   NumberReport: STRING
+   DateReport: TIMESTAMP
+   ArticulNom: STRING
+   DescriptionNom: STRING
+   CodeNom: STRING
+   Price: FLOAT
+   Qty: INTEGER
+   Sum: FLOAT
+   SumFee: FLOAT
+   NumberOrder: STRING
+   DateOrder: TIMESTAMP
+   NumberSale: STRING
+   DateSale: TIMESTAMP
+   IdNom: INTEGER
+   Project: STRING
+   Department: STRING

@@ -30,7 +30,6 @@ def get_schema_field_from_dict(fields: dict) -> list:
         schema.append(bq.SchemaField(name, type))
     return schema
 
-
 def export_js_to_bq(js, tableid, key_path, dataset_id, loger, fields_list):
     if len(js) == 0:  # выгружаем только если есть что выгружать
         loger.info(f"Нет данных для выгрузки dataset: {dataset_id} table: {tableid} " )
@@ -47,6 +46,18 @@ def export_js_to_bq(js, tableid, key_path, dataset_id, loger, fields_list):
     schema = get_schema_bqtable_from_list(fields_list)
     if schema == []:
         schema = get_schema_bqtable_from_config_file(dataset_id, tableid)
+        if len(schema)>0:
+            schdict=[]
+            for i in schema:
+                schdict.append(i.name
+                               )
+            for item in js:
+                keyfordel = []
+                for key in item.keys():
+                    if not key in schdict:
+                        keyfordel.append(key)
+                for key in keyfordel:
+                    del item[key]
 
     if schema != []:
         job_config.schema = schema

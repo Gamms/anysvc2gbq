@@ -279,7 +279,7 @@ def transform_res2js(filter_field_date, res, datefrom, wb_id, option, dateto):
         "ppvz_reward",
         "retail_price_withdisc_rub",
     )
-    int_fields = ("techSize", "ts_name", "ppvz_inn", "penalty", "additional_payment")
+    int_fields = ("barcode","techSize", "ts_name", "ppvz_inn", "penalty", "additional_payment")
     str_fields = ("gNumber", "sticker")
     for el in jsresult:
         if "number" in el:
@@ -292,6 +292,7 @@ def transform_res2js(filter_field_date, res, datefrom, wb_id, option, dateto):
                 el[key] = parse_int(el[key])
             elif key in str_fields:
                 el[key] = str(el[key])
+
 
     return jsresult
 

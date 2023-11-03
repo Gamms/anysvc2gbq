@@ -225,8 +225,8 @@ class App(tk.Tk):
             bqjsonservicefile=bqjsonservicefile,
             bqdataset=bqdataset,
             bqtable=bqtable,
-            dateStart=datefrom.isoformat(),
-            dateEnd=dateto.isoformat()
+            dateStart=datefrom,
+            dateEnd=dateto
         )
 
         pass

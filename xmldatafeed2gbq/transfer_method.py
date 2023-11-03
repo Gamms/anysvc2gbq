@@ -943,7 +943,7 @@ def export_sale_from_1c2bq(
         config = yaml.safe_load(f)
     cli = Client1c(config)
     cli.connect()
-    resultlist = cli.get_sale_by_period(dateStart, dateEnd)
+    resultlist = cli.get_sale_by_period(datetime.datetime.combine(dateStart,datetime.time(0,0,0)), datetime.datetime.combine(dateEnd,datetime.time(0,0,0)))
     if len(resultlist) > 0:
         filterList = []
         filterList.append(

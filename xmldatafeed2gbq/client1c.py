@@ -325,6 +325,55 @@ class Client1c:
             resultlist.append(dict)
         return resultlist
 
+    def get_sale_by_period(self,dateStart,dateEnd) -> list:
+        if self.connection == None:
+            raise "Нет подключения к базе 1С"
+        textquery = get_query_sale_by_period()
+        query = self.connection.NewObject("Query", textquery)
+        query.SetParameter(
+            "BeginPeriod",
+            self.connection.ValueFromStringInternal(
+                f'{{"D",{dateStart.replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y%m%d%H%M%S")}}}'
+            ),
+        )
+        query.SetParameter(
+            "EndPeriod",
+            self.connection.ValueFromStringInternal(
+                f'{{"D",{dateEnd.replace(hour=23, minute=59, second=59, microsecond=0).strftime("%Y%m%d%H%M%S")}}}'
+            ),
+            self.connection.ВидГраницы.Включая,
+        )
+        choose = query.execute().choose()
+        resultlist = []
+        while choose.next():
+            dict = {}
+            if choose.DateOrder != None:
+                dict["DateOrder"] = choose.DateOrder.isoformat()
+            if choose.DateReport != None:
+                dict["DateReport"] = choose.DateReport.isoformat()
+            if choose.DateSale != None:
+                dict["DateSale"] = choose.DateSale.isoformat()
+
+            dict["ArticulNom"] = choose.ArticulNom
+            dict["CodeNom"] = choose.CodeNom
+            dict["DescriptionNom"] = choose.DescriptionNom
+            dict["IdNom"] = choose.IdNom
+
+            dict["NumberOrder"] = choose.NumberOrder
+            dict["NumberReport"] = choose.NumberReport
+            dict["NumberSale"] = choose.NumberSale
+
+            dict["Price"] = choose.Price
+            dict["Qty"] = choose.Qty
+            dict["Sum"] = choose.Sum
+            dict["SumFee"] = choose.SumFee
+
+            dict["Project"] = choose.Project
+            dict["Department"] = choose.Department
+            resultlist.append(dict)
+        return resultlist
+
+
 
 def upload_from_1c(
     config, bqjsonservicefile, bqdataset, bqtable, datestock_start, datestock_end

@@ -408,7 +408,28 @@ def upload_document_commissionreport(
         bqdataset,
         bqtable,
     )
-
+@logger.catch
+@app.command()
+def upload_sale_by_period(
+    bqjsonservicefile: str = "polar.json",
+    bqdataset: str = "DB1C",
+    bqtable: str = "Sale",
+    fileconfig1c: str = "client1C_config.yml",
+    period_option: periodOption = periodOption.manual,
+    datestock_start_str: str = "",
+    datestock_end_str: str = "",
+) -> None:
+    daterange = fill_daterange_from_option(
+        datestock_end_str, datestock_start_str, period_option
+    )
+    transfer_method.export_sale_from_1c2bq(
+        fileconfig1c,
+        bqjsonservicefile,
+        bqdataset,
+        bqtable,
+        daterange["datefrom"],
+        daterange["dateto"],
+    )
 
 if __name__ == "__main__":
     tg_handler = method_telegram.get_loguru_telegramm_notification_handler(

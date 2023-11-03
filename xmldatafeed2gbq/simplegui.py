@@ -214,6 +214,20 @@ class App(tk.Tk):
             bqtable,
         )
 
+    def sale_1c(self, bt):
+        bqjsonservicefile = ("polar.json",)
+        bqdataset = ("DB1C",)
+        bqtable = ("Sale",)
+        fileconfig1c = ("client1C_config.yml",)
+        datefrom, dateto = self.get_date_frame("frame_1C")
+        transfer_method.export_sale_from_1c2bq(
+            fileconfig1c,
+            bqjsonservicefile,
+            bqdataset,
+            bqtable,datefrom.isoformat(),dateto.isoformat(),
+        )
+
+        pass
     def add_frame_1C(self):
         frame = ttk.Frame(self.notebook)
         entrydict = {}
@@ -226,9 +240,16 @@ class App(tk.Tk):
         frame_top1left.pack(side=LEFT)
         frame_top1right = ttk.Frame(frame_top1)
         frame_top1right.pack(side=RIGHT)
-        b1 = ttk.Button(frame_top1left, text="1C Отчеты комиссионеров")
+        frame_top2 = ttk.Frame(frame_top1left)
+        frame_top2.pack(side=TOP)
+        b1 = ttk.Button(frame_top2, text="1C Отчеты комиссионеров (DB1C.ComissionReport)")
         b1.bind("<Button-1>", self.comission_report_1c)
-        b1.pack(side=TOP, padx=1, pady=1)
+        b1.pack(side=LEFT, padx=1, pady=1)
+        frame_top3 = ttk.Frame(frame_top1left)
+        frame_top3.pack(side=TOP)
+        b1 = ttk.Button(frame_top3, text="1C Продажи за период (DB1C.Sale)")
+        b1.bind("<Button-1>", self.sale_1c)
+        b1.pack(side=RIGHT, padx=1, pady=1)
 
         ttk.Label(frame_top, text="Date from").pack(side=LEFT, padx=10, pady=10)
         date_from_element = DateEntry(

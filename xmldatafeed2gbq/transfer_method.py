@@ -936,3 +936,32 @@ def clean_table_if_necessary(
             }
         )
         bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
+def export_sale_from_1c2bq(
+    config_1c, bqjsonservicefile, bqdataset, bqtable, dateStart, dateEnd
+):
+    with open(config_1c, encoding="utf-8") as f:
+        config = yaml.safe_load(f)
+    cli = Client1c(config)
+    cli.connect()
+    resultlist = cli.get_sale_by_period(dateStart, dateEnd)
+    if len(resultlist) > 0:
+        filterList = []
+        filterList.append(
+            {
+                "fieldname": "date_doc",
+                "operator": ">=",
+                "value": dateStart.strftime("%Y-%m-%d"),
+            }
+        )
+        filterList.append(
+            {
+                "fieldname": "date_doc",
+                "operator": "<=",
+                "value": dateEnd.strftime("%Y-%m-%d"),
+            }
+        )
+        bq_method.DeleteRowFromTable(bqtable, bqdataset, bqjsonservicefile, filterList)
+
+    bq_method.export_js_to_bq(
+        resultlist, bqtable, bqjsonservicefile, bqdataset, logger, []
+    )

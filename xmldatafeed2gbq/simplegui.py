@@ -203,10 +203,10 @@ class App(tk.Tk):
         transfer_method.export_stocks_from_1c2ym(fileconfig1c, fileconfigyandex)
 
     def comission_report_1c(self, arg):
-        bqjsonservicefile = ("polar.json",)
-        bqdataset = ("DB1C",)
-        bqtable = ("CommissionReport",)
-        fileconfig1c = ("client1C_config.yml",)
+        bqjsonservicefile = "polar.json"
+        bqdataset = "DB1C"
+        bqtable = "CommissionReport"
+        fileconfig1c = "client1C_config.yml"
         export_documents_commission_report_from_1c2bq(
             fileconfig1c,
             bqjsonservicefile,
@@ -215,10 +215,10 @@ class App(tk.Tk):
         )
 
     def sale_1c(self, bt):
-        bqjsonservicefile = ("polar.json",)
-        bqdataset = ("DB1C",)
-        bqtable = ("Sale",)
-        fileconfig1c = ("client1C_config.yml",)
+        bqjsonservicefile = "polar.json"
+        bqdataset = "DB1C"
+        bqtable = "Sale"
+        fileconfig1c = "client1C_config.yml"
         datefrom, dateto = self.get_date_frame("frame_1C")
         transfer_method.export_sale_from_1c2bq(
             config_1c=fileconfig1c,

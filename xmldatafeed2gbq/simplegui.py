@@ -221,10 +221,12 @@ class App(tk.Tk):
         fileconfig1c = ("client1C_config.yml",)
         datefrom, dateto = self.get_date_frame("frame_1C")
         transfer_method.export_sale_from_1c2bq(
-            fileconfig1c,
-            bqjsonservicefile,
-            bqdataset,
-            bqtable,datefrom.isoformat(),dateto.isoformat(),
+            config_1c=fileconfig1c,
+            bqjsonservicefile=bqjsonservicefile,
+            bqdataset=bqdataset,
+            bqtable=bqtable,
+            dateStart=datefrom.isoformat(),
+            dateEnd=dateto.isoformat()
         )
 
         pass

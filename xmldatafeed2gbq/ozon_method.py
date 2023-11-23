@@ -109,6 +109,8 @@ def query(
     )
     headers = {"Api-Key": apikey, "Client-Id": clientid}
     res = make_query("post", apiuri, data, headers,proxy)
+    if res==0:
+        return []
     js = json.loads(res.text)
     # фильтруем то что уже есть
     items = datablock_from_js(js, method)
@@ -375,10 +377,10 @@ def make_query(method, uri, data_str, headers, data_json={},proxy=''):
 
     for i in range(1, 5):
         if method == "post":
-            if data_json != {}:
-                res = requests.post(uri, json=data_json, headers=headers,proxies=proxies)
-            else:
-                res = requests.post(uri, data=data_str, headers=headers,proxies=proxies)
+#            if data_json != {}:
+#                res = requests.post(uri, json=data_json, headers=headers,proxies=proxies)
+#            else:
+           res = requests.post(uri, data=data_str, headers=headers,proxies=proxies)
         else:
             res = requests.get(uri, data=data_str, headers=headers,proxies=proxies)
 

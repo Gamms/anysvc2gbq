@@ -517,6 +517,7 @@ def wb_export(
 
 
 def get_proxy_byId(wb_id):
+    proxyip=''
     try:
         with open('config_proxy.yml') as f:
             config1 = yaml.safe_load(f)
@@ -902,6 +903,7 @@ def clean_table_if_necessary(
         loger.info(f"чистим записи {method} в bq с {datefrom}:")
         bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
     elif option == "changes":
+        idfield='srid'
         logger.info(f"Чистим  данные в {tablebq} по {len(items)} заказам")
         fieldname = "operation_date"
         filterList = []

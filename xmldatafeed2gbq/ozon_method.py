@@ -72,7 +72,7 @@ def ozon_import(
     datefrom,
     dateto,
     ozon_data_filter_type: OzonDataFilterType,
-    order_id=0,
+    order_id=0,proxy=''
 ):
     # делаем 5 попыток с паузой 1 минута, если не вышло пропускаем
 
@@ -85,7 +85,7 @@ def ozon_import(
         datefrom,
         dateto,
         ozon_data_filter_type,
-        order_id,
+        order_id,proxy
     )
 
     return items
@@ -100,7 +100,7 @@ def query(
     datefrom,
     dateto,
     ozon_data_filter_type: OzonDataFilterType,
-    order_id=0,
+    order_id=0,proxy=''
 ):
     page = 1
     querycount = 1000
@@ -108,7 +108,7 @@ def query(
         page, querycount, method, datefrom, dateto, ozon_data_filter_type, order_id
     )
     headers = {"Api-Key": apikey, "Client-Id": clientid}
-    res = make_query("post", apiuri, data, headers)
+    res = make_query("post", apiuri, data, headers,proxy)
     js = json.loads(res.text)
     # фильтруем то что уже есть
     items = datablock_from_js(js, method)
@@ -364,17 +364,23 @@ def makedata(
     return data, querycount
 
 
-def make_query(method, uri, data_str, headers, data_json={}):
+def make_query(method, uri, data_str, headers, data_json={},proxy=''):
     result = 0
-    for i in range(1, 5):
+    proxies=None
+    if proxy!='':
+        proxies = {'http':proxy,'https':proxy}
 
+
+
+
+    for i in range(1, 5):
         if method == "post":
             if data_json != {}:
-                res = requests.post(uri, json=data_json, headers=headers)
+                res = requests.post(uri, json=data_json, headers=headers,proxies=proxies)
             else:
-                res = requests.post(uri, data=data_str, headers=headers)
+                res = requests.post(uri, data=data_str, headers=headers,proxies=proxies)
         else:
-            res = requests.get(uri, data=data_str, headers=headers)
+            res = requests.get(uri, data=data_str, headers=headers,proxies=proxies)
 
         if res.status_code == 429:
             logger.info(f"Too many requests, wait 60 sec:{uri}")

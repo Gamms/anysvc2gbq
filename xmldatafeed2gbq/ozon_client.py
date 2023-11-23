@@ -6,12 +6,12 @@ import ozon_method
 class OZONApiClient:
     ENDPOINT: str = "https://api-seller.ozon.ru"
 
-    def __init__(self, client_id, api_key, ozon_id):
+    def __init__(self, client_id, api_key, ozon_id,proxi=''):
         self.client_id = client_id
         self.api_key = api_key
         self.ozon_id = ozon_id
         self.date_export = datetime.datetime.now()
-
+        self.proxi=proxi
     def get_header(self):
         headers = {"Api-Key": self.api_key, "Client-Id": self.client_id}
         return headers
@@ -24,7 +24,7 @@ class OZONApiClient:
         itemstotal = []
         while True:
             data_json = self.get_datafilter_stock(limit, last_id)
-            result = ozon_method.make_query("post", uri, "", self.get_header(), data_json=data_json)
+            result = ozon_method.make_query("post", uri, "", self.get_header(), data_json=data_json,proxy=self.proxi)
             js = result.json()
             items_temp = ozon_method.datablock_from_js(js, "stock")
             items = []
@@ -52,7 +52,7 @@ class OZONApiClient:
         page: int=1
         while True:
             data_json = self.get_datafilter_orders(datefromstr,datetostr,page)
-            result = ozon_method.make_query("post", uri, "", self.get_header(), data_json=data_json)
+            result = ozon_method.make_query("post", uri, "", self.get_header(), data_json=data_json,proxy=self.proxi)
             js = result.json()
             result=js['result']
             itemstotal = itemstotal + result['postings']

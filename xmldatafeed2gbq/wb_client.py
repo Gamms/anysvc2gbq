@@ -11,10 +11,10 @@ def get_statistic_url():
 
 
 class WBApiClient:
-    def __init__(self, wbid, api_key):
+    def __init__(self, wbid, api_key,proxi=''):
         self.api_key = api_key
-
         self.wbid = wbid
+        self.proxi=proxi
 
     def get_header_v2(self):
         return {"Authorization": self.api_key, "Content-Type": "application/json"}
@@ -54,10 +54,12 @@ class WBApiClient:
 
     def get_js_request_v2(self, filters, skipping, take, url, data_block):
         headers = self.get_header_v2()
-
+        proxies = None
+        if self.proxi != '':
+            proxies = {'http': self.proxi, 'https': self.proxi}
         orderstotal = []
         while True:
-            res = requests.get(url, params=filters, headers=headers)
+            res = requests.get(url, params=filters, headers=headers,proxies=proxies)
             resjson = res.json()
             orderstotal = orderstotal + resjson[data_block]
             if len(resjson[data_block]) == take:
@@ -205,9 +207,12 @@ class WBApiClient:
 
     def _make_request_v1(self, uri, params, timeout=60):
         headers = self.get_header_v2()
+        proxies = None
+        if self.proxi != '':
+            proxies = {'http': self.proxi, 'https': self.proxi}
         for i in range(1, 5):
             try:
-                res = requests.get(uri, params=params, timeout=timeout, headers=headers)
+                res = requests.get(uri, params=params, timeout=timeout, headers=headers,proxies=proxies)
                 if res.status_code == 200:
                     return res
                 if res.status_code == 429:

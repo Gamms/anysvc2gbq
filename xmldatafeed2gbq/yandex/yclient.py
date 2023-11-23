@@ -12,11 +12,13 @@ class YMApiClient:
         oath_clientid,
         oath_tocken,
         endpoint="https://api.partner.market.yandex.ru/v2/campaigns/",
+        proxi='',
     ):
         self.endpoint = endpoint
         self.oath_tocken = oath_tocken
         self.oath_clientid = oath_clientid
         self.campaign_id = campaign_id
+        self.proxi=proxi
 
     def get_header(self):
         return {

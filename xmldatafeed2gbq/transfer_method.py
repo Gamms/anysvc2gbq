@@ -280,6 +280,8 @@ def wb_export(
     with open(configyml) as f:
         config = yaml.safe_load(f)
 
+
+
     if method == "reportsale":
         field_date = "rr_dt"
     elif option == "byPeriod":
@@ -289,9 +291,14 @@ def wb_export(
 
     for lkConfig in config["lks"]:
         wb_id = lkConfig["lk"]["bq_id"]
+
+        proxyip = get_proxy_byId(wb_id)
+
+
         # apikey_v1 = lkConfig["lk"]["apikey"] неактуальны работают с фефраля 2023
         # apikey_v2 = lkConfig["lk"]["apikeyv2"]
         apikey_v3 = lkConfig["lk"]["apikeyv3"]
+
         if not lkConfig["lk"]["active"]:
             logger.info(
                 f"Импорт из WB {wb_id} отключен в настройках (свойство active из yml)"
@@ -300,7 +307,7 @@ def wb_export(
             continue
 
         if method == "ordersv2":
-            cli = wb_client.WBApiClient(wb_id, apikey_v3)
+            cli = wb_client.WBApiClient(wb_id, apikey_v3,proxyip)
             datefrom, dateto = fill_date(
                 option,
                 bqtable,
@@ -373,7 +380,7 @@ def wb_export(
                 logger.info("Нет данных")
             logger.info(f"end")
         elif method == "stocks_v2":
-            cli = wb_client.WBApiClient(wb_id, apikey_v3)
+            cli = wb_client.WBApiClient(wb_id, apikey_v3,proxyip)
             if datefrom == "":
                 datefrom = datetime.date.today()
                 dateto = datetime.date.today()
@@ -403,7 +410,7 @@ def wb_export(
                 logger.info("Нет данных")
             logger.info(f"end")
         elif method in ("sales", "reportsale", "orders", "stocks_v1", "invoice_v1"):
-            cli = wb_client.WBApiClient(wb_id, apikey_v3)
+            cli = wb_client.WBApiClient(wb_id, apikey_v3,proxyip)
             period = False
             if method == "stocks_v1":
                 if datefrom == "":
@@ -509,6 +516,17 @@ def wb_export(
             raise f"Неподдерживаемый метод выгрузки из wb:{method}"
 
 
+def get_proxy_byId(wb_id):
+    try:
+        with open('config_proxy.yml') as f:
+            config1 = yaml.safe_load(f)
+    except IOError as e:
+        print('Файл прокси не задан')
+    else:
+        proxyip = config1.get(wb_id, '')
+    return proxyip
+
+
 def transfer_orders_transaction_ozon2bq_in_the_period(
     daterange,
     bqdataset,
@@ -526,11 +544,11 @@ def transfer_orders_transaction_ozon2bq_in_the_period(
         ozonid = lkConfig["lk"]["bq_id"]
         apikey = lkConfig["lk"]["apikey"]
         clientid = lkConfig["lk"]["clientid"]
-
+        proxyip = get_proxy_byId(ozonid)
         logger.info(f"Начало импорта из OZON {ozonid}:")
         datefrom = daterange["datefrom"]
         dateto = daterange["dateto"]
-
+        proxyip = get_proxy_byId(ozonid)
         try:
             #   js=ozon_method.ozon_import(apimethods.get(method),apikey,LOG_FILE,dateimport,maxdatechange)
             # clientid='44346'
@@ -544,6 +562,7 @@ def transfer_orders_transaction_ozon2bq_in_the_period(
                 datefrom,
                 dateto,
                 ozon_data_filter_type,
+                proxyip,
             )
             if len(items) != 0:
                 logger.info(f"Чистим  данные в {bqtable} c {datefrom} по {dateto}")
@@ -594,9 +613,11 @@ def export_stocks_from_ozon2bq(bqdataset, bqjsonservicefile, bqtable, configyml)
 
     for lkConfig in config["lks"]:
         ozonid = lkConfig["lk"]["bq_id"]
+        proxyip = get_proxy_byId(ozonid)
+
         apikey = lkConfig["lk"]["apikey"]
         clientid = lkConfig["lk"]["clientid"]
-        cli = OZONApiClient(clientid, apikey, ozonid)
+        cli = OZONApiClient(clientid, apikey, ozonid,proxyip)
         logger.info(f"Начало импорта из OZON {ozonid}:")
         items = cli.get_stocks_v2()
         datetime.date.today().isoformat()

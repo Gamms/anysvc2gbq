@@ -325,13 +325,14 @@ def wb_export(
             )
             orders = cli.get_orders_v3(datefrom, dateto)
             localTimeDelta = datetime.timedelta(hours=3, minutes=0)
-            field_date = "dateCreatedLocal"
+            #field_date = "dateCreatedLocal"
+            field_date='createdAt'
 
             for index, el in enumerate(orders):
                 wb_client.addSharedField(el, wb_id)
                 el[field_date] = (
                     datetime.datetime.strptime(
-                        el["dateCreated"], "%Y-%m-%dT%H:%M:%S.%fZ"
+                        el[field_date], "%Y-%m-%dT%H:%M:%SZ"
                     )
                     + localTimeDelta
                 ).isoformat()
@@ -340,17 +341,19 @@ def wb_export(
                     and type(el["deliveryAddressDetails"]) is dict
                 ):
                     el = el | el["deliveryAddressDetails"]
+                    del el["deliveryAddressDetails"]
 
                 if el.__contains__("userInfo") and type(el["userInfo"]) is dict:
                     el = el | el["userInfo"]
+                    del el["userInfo"]
                 if el.__contains__("entrance") and (
                     el["entrance"] == "" or type(el["entrance"]) is not str
                 ):
                     el["entrance"] = str(el["entrance"])
                     if el["entrance"] == "":
                         el["entrance"] = " "
-                del el["deliveryAddressDetails"]
-                del el["userInfo"]
+
+
                 checkTypeFieldFloat(el, "latitude")
                 checkTypeFieldFloat(el, "longitude")
                 checkTypeFieldFloat(el, "totalPrice")

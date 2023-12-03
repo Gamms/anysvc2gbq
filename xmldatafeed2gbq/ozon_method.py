@@ -377,10 +377,10 @@ def make_query(method, uri, data_str, headers, data_json={},proxy=''):
 
     for i in range(1, 5):
         if method == "post":
-#            if data_json != {}:
-#                res = requests.post(uri, json=data_json, headers=headers,proxies=proxies)
-#            else:
-           res = requests.post(uri, data=data_str, headers=headers,proxies=proxies)
+            if data_str == "":
+               res = requests.post(uri, json=data_json, headers=headers,proxies=proxies)
+            else:
+               res = requests.post(uri, data=data_str, headers=headers,proxies=proxies)
         else:
             res = requests.get(uri, data=data_str, headers=headers,proxies=proxies)
 

@@ -410,7 +410,7 @@ class App(tk.Tk):
         b2 = ttk.Button(frame_top1left, text="WB orders period")
         b2.bind("<Button-1>", self.wb_orders_period)
         b2.pack(side=TOP, padx=1, pady=1)
-        b2 = ttk.Button(frame_top1left, text="WB orders V2 period")
+        b2 = ttk.Button(frame_top1left, text="WB orders V3 period")
         b2.bind("<Button-1>", self.wb_ordersv2_period)
         b2.pack(side=TOP, padx=1, pady=1)
 
@@ -504,8 +504,8 @@ class App(tk.Tk):
         pass
 
     def wb_ordersv2_period(self, bt):
-        method = "ordersv2"
-        bqtable = "ordersv2"
+        method = "ordersv3"
+        bqtable = "ordersv3"
         option = "byPeriod"
         datefrom, dateto = self.get_date_frame("frame_wb")
         transfer_method.wb_export(

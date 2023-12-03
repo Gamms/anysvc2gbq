@@ -33,6 +33,21 @@ class WBApiClient:
         orderstotal = self.get_js_request_v2(filters, skipping, take, url, "orders")
 
         return orderstotal
+    def get_orders_v3(self, datefrom, dateto):
+        url = "https://suppliers-api.wildberries.ru/api/v3/orders"
+        skipping = 0
+
+        take = 1000
+        filters = {
+            "dateFrom": int(datefrom.timestamp()),
+            "dateTo": int(dateto.timestamp()),
+            "limit": take,
+            "next": skipping,
+        }
+        orderstotal = self.get_js_request_v3(filters, skipping, take, url, "orders")
+
+        return orderstotal
+
 
     def get_stocks_v2(self):
         url = "https://suppliers-api.wildberries.ru/api/v2/stocks"
@@ -69,6 +84,23 @@ class WBApiClient:
 
             break
         return orderstotal
+    def get_js_request_v3(self, filters, skipping, take, url, data_block):
+        headers = self.get_header_v2()
+        proxies = None
+        if self.proxi != '':
+            proxies = {'http': self.proxi, 'https': self.proxi}
+        orderstotal = []
+        while True:
+            res = requests.get(url, params=filters, headers=headers,proxies=proxies)
+            resjson = res.json()
+            orderstotal = orderstotal + resjson[data_block]
+            if len(resjson[data_block]) == take:
+                filters["next"] = resjson['next']
+                continue
+
+            break
+        return orderstotal
+
 
     def get_orders_v1(self, datefrom, dateto, option, filterfielddate):
         uri = get_statistic_url() + "/api/v1/supplier/orders"

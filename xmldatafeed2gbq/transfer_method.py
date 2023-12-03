@@ -297,6 +297,7 @@ def wb_export(
 
         # apikey_v1 = lkConfig["lk"]["apikey"] неактуальны работают с фефраля 2023
         # apikey_v2 = lkConfig["lk"]["apikeyv2"]
+        apikeyStat=lkConfig["lk"]["apikeyStat"]
         apikey_v3 = lkConfig["lk"]["apikeyv3"]
 
         if not lkConfig["lk"]["active"]:
@@ -306,7 +307,7 @@ def wb_export(
 
             continue
 
-        if method == "ordersv2":
+        if method == "ordersv3":
             cli = wb_client.WBApiClient(wb_id, apikey_v3,proxyip)
             datefrom, dateto = fill_date(
                 option,
@@ -322,7 +323,7 @@ def wb_export(
             logger.info(
                 f"Начало импорта {method} из WB {wb_id} c {datefrom} по {dateto}:"
             )
-            orders = cli.get_orders_v2(datefrom, dateto)
+            orders = cli.get_orders_v3(datefrom, dateto)
             localTimeDelta = datetime.timedelta(hours=3, minutes=0)
             field_date = "dateCreatedLocal"
 
@@ -410,7 +411,7 @@ def wb_export(
                 logger.info("Нет данных")
             logger.info(f"end")
         elif method in ("sales", "reportsale", "orders", "stocks_v1", "invoice_v1"):
-            cli = wb_client.WBApiClient(wb_id, apikey_v3,proxyip)
+            cli = wb_client.WBApiClient(wb_id, apikeyStat,proxyip)
             period = False
             if method == "stocks_v1":
                 if datefrom == "":

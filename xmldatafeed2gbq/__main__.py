@@ -325,7 +325,7 @@ def upload_from_wb2bq(
     elif operation == wbOperation.report:
         method = "reportsale"
     elif operation == wbOperation.orders_v2:
-        method = "ordersv2"
+        method = "ordersv3"
     elif operation == wbOperation.orders_v2:
         method = "invoice_v1"
     else:

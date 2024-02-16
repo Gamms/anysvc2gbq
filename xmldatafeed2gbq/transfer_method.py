@@ -1,4 +1,5 @@
 import datetime
+import json
 
 import bq_method
 import ozon_method
@@ -280,8 +281,6 @@ def wb_export(
     with open(configyml) as f:
         config = yaml.safe_load(f)
 
-
-
     if method == "reportsale":
         field_date = "rr_dt"
     elif option == "byPeriod":
@@ -294,10 +293,9 @@ def wb_export(
 
         proxyip = get_proxy_byId(wb_id)
 
-
         # apikey_v1 = lkConfig["lk"]["apikey"] неактуальны работают с фефраля 2023
         # apikey_v2 = lkConfig["lk"]["apikeyv2"]
-        apikeyStat=lkConfig["lk"]["apikeyStat"]
+        apikeyStat = lkConfig["lk"]["apikeyStat"]
         apikey_v3 = lkConfig["lk"]["apikeyv3"]
 
         if not lkConfig["lk"]["active"]:
@@ -308,7 +306,7 @@ def wb_export(
             continue
 
         if method == "ordersv3":
-            cli = wb_client.WBApiClient(wb_id, apikey_v3,proxyip)
+            cli = wb_client.WBApiClient(wb_id, apikey_v3, proxyip)
             datefrom, dateto = fill_date(
                 option,
                 bqtable,
@@ -325,8 +323,8 @@ def wb_export(
             )
             orders = cli.get_orders_v3(datefrom, dateto)
             localTimeDelta = datetime.timedelta(hours=3, minutes=0)
-            #field_date = "dateCreatedLocal"
-            field_date='createdAt'
+            # field_date = "dateCreatedLocal"
+            field_date = 'createdAt'
 
             for index, el in enumerate(orders):
                 wb_client.addSharedField(el, wb_id)
@@ -352,7 +350,6 @@ def wb_export(
                     el["entrance"] = str(el["entrance"])
                     if el["entrance"] == "":
                         el["entrance"] = " "
-
 
                 checkTypeFieldFloat(el, "latitude")
                 checkTypeFieldFloat(el, "longitude")
@@ -384,7 +381,7 @@ def wb_export(
                 logger.info("Нет данных")
             logger.info(f"end")
         elif method == "stocks_v2":
-            cli = wb_client.WBApiClient(wb_id, apikey_v3,proxyip)
+            cli = wb_client.WBApiClient(wb_id, apikey_v3, proxyip)
             if datefrom == "":
                 datefrom = datetime.date.today()
                 dateto = datetime.date.today()
@@ -414,7 +411,7 @@ def wb_export(
                 logger.info("Нет данных")
             logger.info(f"end")
         elif method in ("sales", "reportsale", "orders", "stocks_v1", "invoice_v1"):
-            cli = wb_client.WBApiClient(wb_id, apikeyStat,proxyip)
+            cli = wb_client.WBApiClient(wb_id, apikeyStat, proxyip)
             period = False
             if method == "stocks_v1":
                 if datefrom == "":
@@ -521,7 +518,7 @@ def wb_export(
 
 
 def get_proxy_byId(wb_id):
-    proxyip=''
+    proxyip = ''
     try:
         with open('config_proxy.yml') as f:
             config1 = yaml.safe_load(f)
@@ -622,7 +619,7 @@ def export_stocks_from_ozon2bq(bqdataset, bqjsonservicefile, bqtable, configyml)
 
         apikey = lkConfig["lk"]["apikey"]
         clientid = lkConfig["lk"]["clientid"]
-        cli = OZONApiClient(clientid, apikey, ozonid,proxyip)
+        cli = OZONApiClient(clientid, apikey, ozonid, proxyip)
         logger.info(f"Начало импорта из OZON {ozonid}:")
         items = cli.get_stocks_v2()
         datetime.date.today().isoformat()
@@ -907,7 +904,7 @@ def clean_table_if_necessary(
         loger.info(f"чистим записи {method} в bq с {datefrom}:")
         bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
     elif option == "changes":
-        idfield='srid'
+        idfield = 'srid'
         logger.info(f"Чистим  данные в {tablebq} по {len(items)} заказам")
         fieldname = "operation_date"
         filterList = []
@@ -963,6 +960,8 @@ def clean_table_if_necessary(
             }
         )
         bq_method.DeleteRowFromTable(tablebq, datasetid, jsonkey, filterList)
+
+
 def export_sale_from_1c2bq(
     config_1c, bqjsonservicefile, bqdataset, bqtable, dateStart, dateEnd
 ):
@@ -970,7 +969,8 @@ def export_sale_from_1c2bq(
         config = yaml.safe_load(f)
     cli = Client1c(config)
     cli.connect()
-    resultlist = cli.get_sale_by_period(datetime.datetime.combine(dateStart,datetime.time(0,0,0)), datetime.datetime.combine(dateEnd,datetime.time(0,0,0)))
+    resultlist = cli.get_sale_by_period(datetime.datetime.combine(dateStart, datetime.time(0, 0, 0)),
+                                        datetime.datetime.combine(dateEnd, datetime.time(0, 0, 0)))
     if len(resultlist) > 0:
         filterList = []
         filterList.append(
@@ -991,4 +991,13 @@ def export_sale_from_1c2bq(
 
     bq_method.export_js_to_bq(
         resultlist, bqtable, bqjsonservicefile, bqdataset, logger, []
+    )
+
+
+def export_from_dict_to_gbq(elementList: list,
+                                 bqjsonservicefile: str, bqdataset: str, bqtable: str
+                                 ):
+
+    bq_method.export_js_to_bq(
+        elementList, bqtable, bqjsonservicefile, bqdataset, logger, []
     )

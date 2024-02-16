@@ -13,8 +13,9 @@ import verifydata
 from client1c import export_documents_commission_report_from_1c2bq
 from loguru import logger
 from tkcalendar import DateEntry
-
-
+from tkinter import filedialog as fd
+import pandas as pd
+import openpyxl
 class QueueHandler(logging.Handler):
     """Class to send logging records to a queue
     It can be used from different threads
@@ -93,6 +94,7 @@ class App(tk.Tk):
         self.add_frame_ym()
         self.add_frame_verify()
         self.add_frame_1C()
+        self.add_frame_DetMir()
         frame = ttk.Frame(self.notebook)
 
         self.label = ttk.Label(self)
@@ -106,7 +108,7 @@ class App(tk.Tk):
         console_frame.rowconfigure(0, weight=1)
         self.console = ConsoleUi(console_frame)
         self.console.frame.pack()
-
+        self.filename=''
     def add_frame_verify(self):
         frame = ttk.Frame(self.notebook)
         self.notebook.add(frame, text="Verify data", underline=0, sticky=tk.NE + tk.SW)
@@ -230,6 +232,81 @@ class App(tk.Tk):
         )
 
         pass
+
+    def chooseFileXls(self,bt):
+        self.filename = fd.askopenfilename(defaultextension=".xls",filetypes=[("All types",".*"),("XLS",".xls"),("XLSX",".xlsx")])
+        print(self.filename)
+        self.labelFile.config(text=self.filename)
+
+
+    def sale_info_detmir(self,bt):
+        dataExcel=pd.read_excel(self.filename,usecols='A:T')
+        dic=dataExcel.to_dict('records')
+        a = str(dic[0])
+        endstr = a.find(' с ')
+        Org=a[29:57]
+        frame_entry_dict = self.entry_dict['frame_DetMir']
+        date_element = frame_entry_dict["date_element"]
+        date = date_element.get_date()
+
+        listColumn=['name','brand','code','subseason','season','articul','shk','size','numberContract',\
+                    'inQty','inValue','orderQty','orderValue','outstandingQty','outstandingValue','saleQty','saleValue','outQty','outValue','stock']
+        newlist=[]
+        for i in range(2,len(dic)-1):
+            newdic = {}
+            for value, key in zip(dic[i].values(), listColumn):
+                if str(value)=='nan':
+                    value=''
+                if key.find('Value')>0:
+                    value=float(value)
+                newdic[key]=value
+            newdic['date']=date.isoformat()
+            newdic['org'] =Org
+
+            newlist.append(newdic)
+        transfer_method.export_from_dict_to_gbq(newlist,"polar.json","DetMir", "Sale")
+
+        pass
+    def add_frame_DetMir(self):
+        frame = ttk.Frame(self.notebook)
+        entrydict = {}
+        self.notebook.add(frame, text="Детский мир", underline=0, sticky=tk.NE + tk.SW)
+        frame_top = ttk.Frame(frame)
+        frame_top.pack(side=TOP)
+        frame_top1 = ttk.Frame(frame)
+        frame_top1.pack(side=TOP)
+        frame_top1left = ttk.Frame(frame_top1)
+        frame_top1left.pack(side=LEFT)
+        frame_top1right = ttk.Frame(frame_top1)
+        frame_top1right.pack(side=RIGHT)
+        frame_top2 = ttk.Frame(frame_top1left)
+        frame_top2.pack(side=TOP)
+
+        b1 = ttk.Button(frame_top2, text="Выбрать файл Excel с данными о продаже")
+        b1.bind("<Button-1>", self.chooseFileXls)
+        b1.pack(side=LEFT, padx=1, pady=1)
+        self.labelFile=ttk.Label(frame_top, text="Date from")
+        self.labelFile.pack(side=LEFT, padx=10, pady=10)
+        self.labelFile.config(text='Выберите файл')
+        b1 = ttk.Button(frame_top2, text="Загрузка из Excel данных о продажах")
+        b1.bind("<Button-1>", self.sale_info_detmir)
+        b1.pack(side=LEFT, padx=1, pady=1)
+
+        ttk.Label(frame_top1left, text="Дата операций").pack(side=LEFT, padx=10, pady=10)
+        date_from_element = DateEntry(
+            frame_top1left,
+            locale="ru_RU",
+            date_pattern="dd-mm-y",
+            width=12,
+            background="darkblue",
+            foreground="white",
+            borderwidth=2,
+        )
+        date_from_element.pack(side=LEFT, padx=10, pady=10)
+        entrydict = {}
+        entrydict["date_element"] = date_from_element
+        self.entry_dict["frame_DetMir"] = entrydict
+
     def add_frame_1C(self):
         frame = ttk.Frame(self.notebook)
         entrydict = {}
